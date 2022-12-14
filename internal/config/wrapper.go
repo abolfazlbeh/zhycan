@@ -95,7 +95,7 @@ func (w *ViperWrapper) LoadFromRemote(data []byte) error {
 }
 
 // RegisterChangeCallback - get function and call it when config file changed
-func (w *ViperWrapper) RegisterChangeCallback(fn func()) {
+func (w *ViperWrapper) RegisterChangeCallback(fn func() interface{}) {
 	w.wg.Wait()
 
 	w.Instance.WatchConfig()

@@ -1,0 +1,19 @@
+{
+  "type": "zap",
+  "output": ["console"],
+  "channel_size": 1000,
+  "options": ["caller", "stackTrace"],
+  "console": {
+    "level": "debug"
+  },
+  "graylog": {
+    "ip": "graylog.graylog",
+    "port": 12201,
+    "stdout": true
+  },
+  "syslog": {
+    "ip": "172.25.205.37",
+    "port": 514,
+    "ctype": "tcp"
+  }
+}
