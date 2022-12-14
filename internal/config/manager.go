@@ -141,8 +141,8 @@ func (p *manager) loadModules() {
 
 // MARK: Public Methods
 
-// New - Create a new manager instance
-func (p *manager) New(configBasePath string, configInitialMode string, configEnvPrefix string) error {
+// CreateManager - Create a new manager instance
+func CreateManager(configBasePath string, configInitialMode string, configEnvPrefix string) error {
 	// once used for prevent race condition and manage critical section.
 	if providerInstance == nil {
 		var err error
