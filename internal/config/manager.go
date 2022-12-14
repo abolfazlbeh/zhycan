@@ -182,6 +182,11 @@ func (p *manager) GetName() string {
 	return viper.GetString("name")
 }
 
+// GetOperationType - returns operation type which could be `dev`, `prod`
+func (p *manager) GetOperationType() string {
+	return p.configMode
+}
+
 // GetHostName - returns hostname based on config
 func (p *manager) GetHostName() string {
 	return os.Getenv(fmt.Sprintf("%s_HOSTNAME", p.GetName()))
