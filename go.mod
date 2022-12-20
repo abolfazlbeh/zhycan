@@ -1,10 +1,9 @@
 module zhycan
 
-go 1.17
+go 1.19
 
 require (
 	github.com/fsnotify/fsnotify v1.6.0
-	github.com/mattn/go-colorable v0.1.12
 	github.com/spf13/viper v1.14.0
 	go.uber.org/zap v1.21.0
 )
@@ -12,7 +11,6 @@ require (
 require (
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/magiconair/properties v1.8.6 // indirect
-	github.com/mattn/go-isatty v0.0.14 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/pelletier/go-toml v1.9.5 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.5 // indirect
