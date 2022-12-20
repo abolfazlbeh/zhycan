@@ -121,6 +121,8 @@ func (p *manager) loadModules() {
 		if err == nil {
 			p.modules[item] = w
 			p.modulesStatus[item] = true
+		} else {
+			p.modulesStatus[item] = false
 		}
 	}
 	//else if src == "remote" {
@@ -195,9 +197,9 @@ func (p *manager) GetHostName() string {
 // Get - get value of the key in specific category
 func (p *manager) Get(category string, name string) (interface{}, error) {
 	if val, ok := p.modules[category]; ok {
-		result := val.Get(name, false)
-		if result != nil {
-			return val.Get(name, false), nil
+		result, exist := val.Get(name, false)
+		if exist {
+			return result, nil
 		}
 
 		return nil, NewKeyNotExistErr(name, category, nil)
@@ -232,6 +234,18 @@ func (p *manager) IsInitialized() bool {
 		}
 	}
 	return flag
+}
+
+// GetAllInitializedModuleList - get list of names that initialized truly
+func (p *manager) GetAllInitializedModuleList() []string {
+	var result []string
+	for key, val := range p.modulesStatus {
+		if val {
+			result = append(result, key)
+		}
+	}
+
+	return result
 }
 
 // remoteConfigLoader - get configs from remote

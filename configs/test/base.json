@@ -1,0 +1,8 @@
+{
+  "name": "zhycan",
+  "config_must_watched": true,
+  "config_remote_addr": "0.0.0.0:7777",
+  "config_remote_infra": "grpc",
+  "config_remote_duration": 300,
+  "modules": ["logger"]
+}
