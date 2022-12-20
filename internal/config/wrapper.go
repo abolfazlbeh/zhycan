@@ -41,8 +41,8 @@ func (w *ViperWrapper) Load() error {
 	}
 
 	// Get env variables and bind them if exist in config file
-	env := w.Get("env", true)
-	if env != nil {
+	env, exist := w.Get("env", true)
+	if env != nil && exist {
 		envArray := make([]string, len(env.([]interface{})))
 		for i, v := range env.([]interface{}) {
 			envArray[i] = v.(string)
@@ -75,8 +75,8 @@ func (w *ViperWrapper) LoadFromRemote(data []byte) error {
 	}
 
 	// Get env variables and bind them if exist in config file
-	env := w.Get("env", true)
-	if env != nil {
+	env, exist := w.Get("env", true)
+	if env != nil && exist {
 		envArray := make([]string, len(env.([]interface{})))
 		for i, v := range env.([]interface{}) {
 			envArray[i] = v.(string)
@@ -109,7 +109,7 @@ func (w *ViperWrapper) RegisterChangeCallback(fn func() interface{}) {
 }
 
 // Get method - returns value base on key
-func (w *ViperWrapper) Get(key string, bypass bool) interface{} {
+func (w *ViperWrapper) Get(key string, bypass bool) (interface{}, bool) {
 	if !bypass {
 		w.wg.Wait()
 	}
@@ -117,7 +117,8 @@ func (w *ViperWrapper) Get(key string, bypass bool) interface{} {
 	w.lock.Lock()
 	defer w.lock.Unlock()
 
-	return w.Instance.Get(key)
+	exist := w.Instance.InConfig(key)
+	return w.Instance.Get(key), exist
 }
 
 // Set method - set value by given key and write it back to file
