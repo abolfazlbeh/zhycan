@@ -70,7 +70,7 @@ func (l *ZapWrapper) Constructor(name string) {
 
 		var cores []zapcore.Core
 		for _, outputItem := range outputArray {
-			if utils.ArrayContains(l.supportedOutput, outputItem) {
+			if utils.ArrayContains(&l.supportedOutput, outputItem) {
 				if outputItem == "console" {
 					level := zapcore.DebugLevel
 
@@ -101,7 +101,7 @@ func (l *ZapWrapper) Constructor(name string) {
 
 		var cores []zapcore.Core
 		for _, outputItem := range outputArray {
-			if utils.ArrayContains(l.supportedOutput, outputItem) {
+			if utils.ArrayContains(&l.supportedOutput, outputItem) {
 				if outputItem == "console" {
 					level := zapcore.DebugLevel
 
