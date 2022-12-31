@@ -1,10 +1,14 @@
 {
   "type": "zap",
-  "output": ["console"],
+  "output": ["console", "file"],
   "channel_size": 1000,
   "options": ["caller", "stackTrace"],
   "console": {
     "level": "debug"
+  },
+  "file": {
+    "level": "debug",
+    "path": "/tmp"
   },
   "graylog": {
     "ip": "graylog.graylog",

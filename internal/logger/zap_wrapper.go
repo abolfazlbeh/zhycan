@@ -89,6 +89,46 @@ func (l *ZapWrapper) Constructor(name string) error {
 					consoleEncoder := zapcore.NewConsoleEncoder(productionEncoderConfig)
 					c := zapcore.NewCore(consoleEncoder, zapcore.AddSync(os.Stdout), level)
 					cores = append(cores, c)
+				} else if outputItem == "file" {
+					level := zapcore.DebugLevel
+
+					key := fmt.Sprintf("%s.level", outputItem)
+					levelStr, err := config.GetManager().Get(l.name, key)
+					if err == nil {
+						level, err = zapcore.ParseLevel(levelStr.(string))
+						if err != nil {
+							continue
+						}
+					}
+
+					// Read the root path of logs
+					path := "logs"
+					key = fmt.Sprintf("%s.path", outputItem)
+					pathStr, err := config.GetManager().Get(l.name, key)
+					if err == nil {
+						if strings.TrimSpace(pathStr.(string)) != "" {
+							path = strings.TrimSpace(pathStr.(string))
+						}
+					}
+
+					// Check the directory existed, If not create all the nested directories
+					if _, err := os.Stat(path); errors.Is(err, os.ErrNotExist) {
+						err1 := os.MkdirAll(path, os.ModePerm)
+						if err1 != nil {
+							continue
+						}
+					}
+
+					expectLogPath := filepath.Join(path, fmt.Sprintf("%s.log", config.GetManager().GetName()))
+					logFile, err := os.OpenFile(expectLogPath, os.O_CREATE|os.O_APPEND|os.O_WRONLY, os.ModePerm)
+					if err != nil {
+						continue
+					}
+					writer := zapcore.AddSync(logFile)
+					fileEncoder := zapcore.NewJSONEncoder(productionEncoderConfig)
+
+					c := zapcore.NewCore(fileEncoder, writer, level)
+					cores = append(cores, c)
 				}
 			}
 		}
@@ -96,7 +136,7 @@ func (l *ZapWrapper) Constructor(name string) error {
 		core := zapcore.NewTee(
 			cores...,
 		)
-		l.logger = zap.New(core, zap.AddCaller(), zap.AddStacktrace(zapcore.ErrorLevel))
+		l.logger = zap.New(core, zap.AddStacktrace(zapcore.ErrorLevel))
 	} else { // otherwise we create a development version (`dev`, `test`, ...)
 		developmentEncoderConfig := zap.NewDevelopmentEncoderConfig()
 		developmentEncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
