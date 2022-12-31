@@ -2,10 +2,13 @@ package logger
 
 // Imports needed list
 import (
+	"errors"
 	"fmt"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"os"
+	"path/filepath"
+	"strings"
 	"sync"
 	"zhycan/internal/config"
 	"zhycan/internal/utils"
@@ -26,7 +29,7 @@ type ZapWrapper struct {
 }
 
 // Constructor - It initializes the logger configuration params
-func (l *ZapWrapper) Constructor(name string) {
+func (l *ZapWrapper) Constructor(name string) error {
 	l.wg.Add(1)
 	defer l.wg.Done()
 
@@ -38,12 +41,12 @@ func (l *ZapWrapper) Constructor(name string) {
 
 	channelSize, err := config.GetManager().Get(l.name, "channel_size")
 	if err != nil {
-		return
+		return err
 	}
 
 	options, err := config.GetManager().Get(l.name, "options")
 	if err != nil {
-		return
+		return err
 	}
 
 	optionArray := make([]string, len(options.([]interface{})))
@@ -53,7 +56,7 @@ func (l *ZapWrapper) Constructor(name string) {
 
 	outputs, err := config.GetManager().Get(l.name, "outputs")
 	if err != nil {
-		return
+		return err
 	}
 
 	outputArray := make([]string, len(outputs.([]interface{})))
@@ -118,6 +121,46 @@ func (l *ZapWrapper) Constructor(name string) {
 					c := zapcore.NewCore(consoleEncoder, zapcore.AddSync(os.Stdout), level)
 
 					cores = append(cores, c)
+				} else if outputItem == "file" {
+					level := zapcore.DebugLevel
+
+					key := fmt.Sprintf("%s.level", outputItem)
+					levelStr, err := config.GetManager().Get(l.name, key)
+					if err == nil {
+						level, err = zapcore.ParseLevel(levelStr.(string))
+						if err != nil {
+							continue
+						}
+					}
+
+					// Read the root path of logs
+					path := "logs"
+					key = fmt.Sprintf("%s.path", outputItem)
+					pathStr, err := config.GetManager().Get(l.name, key)
+					if err == nil {
+						if strings.TrimSpace(pathStr.(string)) != "" {
+							path = strings.TrimSpace(pathStr.(string))
+						}
+					}
+
+					// Check the directory existed, If not create all the nested directories
+					if _, err := os.Stat(path); errors.Is(err, os.ErrNotExist) {
+						err1 := os.MkdirAll(path, os.ModePerm)
+						if err1 != nil {
+							continue
+						}
+					}
+
+					expectLogPath := filepath.Join(path, fmt.Sprintf("%s.log", config.GetManager().GetName()))
+					logFile, err := os.OpenFile(expectLogPath, os.O_CREATE|os.O_APPEND|os.O_WRONLY, os.ModePerm)
+					if err != nil {
+						continue
+					}
+					writer := zapcore.AddSync(logFile)
+					fileEncoder := zapcore.NewJSONEncoder(developmentEncoderConfig)
+
+					c := zapcore.NewCore(fileEncoder, writer, level)
+					cores = append(cores, c)
 				}
 			}
 		}
@@ -125,11 +168,13 @@ func (l *ZapWrapper) Constructor(name string) {
 		core := zapcore.NewTee(
 			cores...,
 		)
-		l.logger = zap.New(core, zap.AddCaller(), zap.AddStacktrace(zapcore.ErrorLevel))
+		l.logger = zap.New(core, zap.AddStacktrace(zapcore.ErrorLevel))
 	}
 
 	go l.runner()
 	l.initialized = true
+
+	return nil
 }
 
 // Close - it closes logger channel
@@ -158,6 +203,12 @@ func (l *ZapWrapper) IsInitialized() bool {
 func (l *ZapWrapper) Instance() *zap.Logger {
 	l.wg.Wait()
 	return l.logger
+}
+
+// Sync - call the sync method of the project
+func (l *ZapWrapper) Sync() {
+	l.wg.Wait()
+	l.logger.Sync()
 }
 
 // ZapWrapper runner - the goroutine that reads from channel and process it
