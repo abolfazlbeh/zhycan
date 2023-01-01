@@ -97,6 +97,52 @@ func NewInitCmd() *cobra.Command {
 }
 
 func initCmdExecute(cmd *cobra.Command, args []string) {
+	fmt.Fprintf(cmd.OutOrStdout(), InitializeMessage)
+
+	// Get project name and directory path
+	projectName := args[0]
+	projectPath, err := cmd.Flags().GetString("path")
+	if err != nil {
+		projectPath = DefaultProjectDirectory
+	}
+
+	expectedProjectPath := filepath.Join(projectPath, projectName)
+	if err := os.Mkdir(expectedProjectPath, os.ModePerm); err != nil {
+		fmt.Fprintln(cmd.OutOrStdout())
+		fmt.Fprintf(cmd.OutOrStdout(), RootDirectoryIsNotCreated, expectedProjectPath, err)
+		return
+	} else {
+		fmt.Fprintln(cmd.OutOrStdout())
+		fmt.Fprintf(cmd.OutOrStdout(), RootDirectoryIsCreated, expectedProjectPath)
+	}
+
+	// Create go.mod file
+	goVersion := "1.19"
+	err = createGoModFile(cmd, expectedProjectPath, projectName, goVersion)
+	if err != nil {
+		return
+	}
+
+	// Create main.go file
+	currentUser, err := user.Current()
+	if err != nil {
+		fmt.Fprintln(cmd.OutOrStdout())
+		fmt.Fprintf(cmd.OutOrStdout(), UserNotExisted, err)
+		return
+	} else {
+		fmt.Fprintln(cmd.OutOrStdout())
+		fmt.Fprintf(cmd.OutOrStdout(), UserExisted)
+	}
+
+	err = createMainGoFile(cmd, expectedProjectPath, projectName, currentUser.Username)
+	if err != nil {
+		return
+	}
+
+	err = createSubDirectories(cmd, expectedProjectPath)
+	if err != nil {
+		return
+	}
 }
 
 func createGoModFile(cmd *cobra.Command, expectedProjectPath string, projectName string, goVersion string) error {
@@ -115,7 +161,7 @@ func createGoModFile(cmd *cobra.Command, expectedProjectPath string, projectName
 		fmt.Fprintf(cmd.OutOrStdout(), GoModuleFileIsCreated)
 	}
 
-	temp := template.Must(template.ParseFiles("./templates/gomod.gotmpl"))
+	temp := template.Must(template.ParseFiles("./commands/templates/gomod.gotmpl"))
 	goModuleVars := struct {
 		ProjectName string
 		Version     string
@@ -152,7 +198,7 @@ func createMainGoFile(cmd *cobra.Command, expectedProjectPath string, projectNam
 		fmt.Fprintf(cmd.OutOrStdout(), MainGoFileIsCreated)
 	}
 
-	temp := template.Must(template.ParseFiles("./templates/main.gotmpl"))
+	temp := template.Must(template.ParseFiles("./commands/templates/main.gotmpl"))
 	goModuleVars := struct {
 		ProjectName     string
 		CreatorUserName string
