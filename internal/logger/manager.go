@@ -25,7 +25,7 @@ func init() {
 	log.Println("Logger Manager Package Initialized...")
 }
 
-// Manager Constructor - It initializes the db configuration params
+// init - Manager Constructor - It initializes the db configuration params
 func (m *manager) init() {
 	m.name = "logger"
 	m.lock.Lock()

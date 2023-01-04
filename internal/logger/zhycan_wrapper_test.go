@@ -28,7 +28,7 @@ func Test_ZhycanConsoleLogger(t *testing.T) {
 
 	done := capture()
 
-	logg := &ZhycanWrapper{}
+	logg := &LogMeWrapper{}
 	err = logg.Constructor("logger")
 	if err != nil {
 		t.Errorf("Initializing the Zhycan Wrapper, Expected to don't have error, but got %v", err)
