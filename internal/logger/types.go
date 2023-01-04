@@ -2,6 +2,7 @@ package logger
 
 // Imports needed list
 import (
+	"strings"
 	"time"
 )
 
@@ -43,6 +44,20 @@ const (
 	ERROR
 )
 
+func (l LogLevel) String() string {
+	switch l {
+	case DEBUG:
+		return "DEBUG"
+	case INFO:
+		return "INFO"
+	case WARNING:
+		return "WARNING"
+	case ERROR:
+		return "ERROR"
+	}
+	return "DEFAULT"
+}
+
 // IsLogLevel - check whether is a true log level
 func (l LogLevel) IsLogLevel() bool {
 	if l <= DEBUG && l >= ERROR {
@@ -50,6 +65,20 @@ func (l LogLevel) IsLogLevel() bool {
 	}
 
 	return false
+}
+
+func StringToLogLevel(level string) LogLevel {
+	switch strings.ToUpper(level) {
+	case "DEBUG":
+		return DEBUG
+	case "INFO":
+		return INFO
+	case "WARNING":
+		return WARNING
+	case "ERROR":
+		return ERROR
+	}
+	return DEBUG
 }
 
 // LogType Object
@@ -61,18 +90,6 @@ var (
 	FuncMaintenanceType = LogType{name: "FUNC_MAINT"}
 	DebugType           = LogType{name: "DEBUG_INFORMATION"}
 )
-
-//const (
-//	TYPE_FUNC_MAINT LogType = iota
-//	TYPE_DB_ERROR
-//	TYPE_CONVERT_ERROR
-//	TYPE_HTTP_ERROR
-//	TYPE_NIL_OBJECT
-//	TYPE_ENCRYPTION_ERROR
-//	TYPE_HTTP_REQUESTED
-//	TYPE_HTTP_RESPONSED
-//	TYPE_DEBUG_INFORMATION
-//)
 
 func (l LogType) String() string {
 	return l.name

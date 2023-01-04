@@ -1,6 +1,6 @@
 {
   "type": "zap",
-  "outputs": ["console", "file"],
+  "outputs": ["console"],
   "channel_size": 1000,
   "options": ["caller", "stackTrace"],
   "console": {

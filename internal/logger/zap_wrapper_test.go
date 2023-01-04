@@ -9,7 +9,7 @@ import (
 	"zhycan/internal/config"
 )
 
-func TestZapFileLogger(t *testing.T) {
+func Test_ZapFileLogger(t *testing.T) {
 	path := "../.."
 	initialMode := "test"
 	prefix := "ZHYCAN"
