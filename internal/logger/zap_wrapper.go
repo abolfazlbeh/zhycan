@@ -16,7 +16,7 @@ import (
 
 // Mark: ZapWrapper
 
-// ZapWrapper object - implements Logger interface
+// ZapWrapper structure - implements Logger interface
 type ZapWrapper struct {
 	name            string
 	serviceName     string
@@ -49,7 +49,7 @@ func (l *ZapWrapper) Constructor(name string) error {
 		return err
 	}
 
-	optionArray := make([]string, len(options.([]interface{})))
+	var optionArray []string
 	for _, v := range options.([]interface{}) {
 		optionArray = append(optionArray, v.(string))
 	}
@@ -59,7 +59,7 @@ func (l *ZapWrapper) Constructor(name string) error {
 		return err
 	}
 
-	outputArray := make([]string, len(outputs.([]interface{})))
+	var outputArray []string
 	for _, v := range outputs.([]interface{}) {
 		outputArray = append(outputArray, v.(string))
 	}
@@ -251,7 +251,7 @@ func (l *ZapWrapper) Sync() {
 	l.logger.Sync()
 }
 
-// ZapWrapper runner - the goroutine that reads from channel and process it
+// runner - the goroutine that reads from channel and process it
 func (l *ZapWrapper) runner() {
 	l.wg.Wait()
 	for c := range l.ch {

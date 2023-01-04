@@ -39,6 +39,9 @@ func (m *manager) init() {
 	if t == "zap" {
 		m.logger = &ZapWrapper{}
 		m.logger.Constructor(m.name)
+	} else if t == "logme" {
+		m.logger = &LogMeWrapper{}
+		m.logger.Constructor(m.name)
 	}
 
 	// Config config server to reload
