@@ -68,7 +68,7 @@ func GetManager() *manager {
 }
 
 // GetLogger - This function returns logger instance
-func (m *manager) GetLogger() (Logger, error) {
+func (m *manager) GetLogger() (Logger, *Error) {
 	m.lock.Lock()
 	defer m.lock.Unlock()
 
