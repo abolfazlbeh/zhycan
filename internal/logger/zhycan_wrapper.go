@@ -126,7 +126,7 @@ func (l *LogMeWrapper) Log(obj *LogObject) {
 	}(obj)
 }
 
-// Sync - call the sync method of the project
+// Sync - sync all logs to medium
 func (l *LogMeWrapper) Sync() {
 	l.wg.Wait()
 	ch := make(chan bool, 1)

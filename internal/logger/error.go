@@ -13,6 +13,6 @@ func (err *Error) Error() string {
 }
 
 // NewError - return a new instance of Error
-func NewError(err error) error {
+func NewError(err error) *Error {
 	return &Error{Err: err}
 }
