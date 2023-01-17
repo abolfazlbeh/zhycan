@@ -1,18 +1,22 @@
 /*
-Zhycan Framework
-Copyright © 2022 - Abolfazl Behroozi
+Create By Zhycan Framework
 
+Copyright © {{.Year}}
 Project: {{.ProjectName}}
 File: `main.go` --> {{ .Time.Format .TimeFormat }} by {{.CreatorUserName}}
 ------------------------------
 */
 package main
 
-import "fmt"
+import (
+    "fmt"
+    "{{.ProjectName}}/commands"
+)
 
 /*
 The main file of the project
 */
 func main() {
     fmt.Println("{{.ProjectName}} is Started ...")
+    commands.Execute()
 }
