@@ -48,6 +48,8 @@ func Test_ExecuteInitCmd(t *testing.T) {
 		expectedStr += "\n" + fmt.Sprintf(SubDirectoryIsCreated, item)
 	}
 	expectedStr += "\n" + fmt.Sprintf(RootCommandGoFileIsCreated)
+	expectedStr += "\n" + fmt.Sprintf(GitInitExecuted)
+	expectedStr += "\n" + fmt.Sprintf(GitIgnoreFileIsCreated)
 
 	if string(out) != expectedStr {
 		t.Errorf("Expected %v, but got: %v", expectedStr, string(out))
@@ -70,6 +72,27 @@ func Test_ExecuteInitCmd(t *testing.T) {
 	mainGoPath := filepath.Join(expectedPathToCheck, "main.go")
 	if _, err := os.Stat(mainGoPath); errors.Is(err, os.ErrNotExist) {
 		t.Errorf("Filename with the path of `%v` must be existed, but got err: %v", mainGoPath, err)
+		return
+	}
+
+	// directory must contain `.git` folder
+	dotGitPath := filepath.Join(expectedPathToCheck, ".git")
+	st, err := os.Stat(dotGitPath)
+	if errors.Is(err, os.ErrNotExist) {
+		t.Errorf("Folder with the path of `%v` must be existed, but got err: %v", dotGitPath, err)
+		return
+	}
+	if err == nil {
+		if !st.IsDir() {
+			t.Errorf("Folder with the path of `%v` must be existed, but got err: %v", dotGitPath, err)
+			return
+		}
+	}
+
+	// directory must contain `.gitignore` file
+	gitIgnorePath := filepath.Join(expectedPathToCheck, ".gitignore")
+	if _, err := os.Stat(gitIgnorePath); errors.Is(err, os.ErrNotExist) {
+		t.Errorf("Filename with the path of `%v` must be existed, but got err: %v", gitIgnorePath, err)
 		return
 	}
 

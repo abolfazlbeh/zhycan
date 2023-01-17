@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/spf13/cobra"
 	"os"
+	"os/exec"
 	"os/user"
 	"path/filepath"
 	"sort"
@@ -12,6 +13,8 @@ import (
 )
 
 const (
+	DefaultProjectDirectory = "."
+
 	InitializeMessage         = `Zhycan > Create project skeleton ...`
 	RootDirectoryIsCreated    = `Zhycan > Project root (%s) is created ...`
 	RootDirectoryIsNotCreated = `Zhycan > Project root (%s) is not created correctly ...%v`
@@ -30,14 +33,18 @@ const (
 
 	RootCommandGoFileIsCreated    = `Zhycan > Root command File "commands/root.go" is created ...`
 	RootCommandGoFileIsNotCreated = `Zhycan > Root command File "commands/root.go" is not created ... %v`
-	RootCommandGoIsCreated        = `Zhycan > Root command "commands/root.go" is filled ...`
-	RootCommandGoIsNotCreated     = `Zhycan >  Root command "commands/root.go" is not filled ... %v`
+	RootCommandGoIsNotCreated     = `Zhycan > Root command "commands/root.go" is not filled ... %v`
 
-	DefaultProjectDirectory = "."
+	GitIgnoreFileIsCreated    = `Zhycan > Git Ignore File ".gitignore" is created ...`
+	GitIgnoreFileIsNotCreated = `Zhycan > Git Ignore File ".gitignore" is not created ... %v`
+	GitIgnoreIsNotCreated     = `Zhycan > Git Ignore ".gitignore" is not filled ... %v`
+
+	GitInitExecutedError = `Zhycan > Cannot execute git init command ... %v`
+	GitInitExecuted      = `Zhycan > Git repository is initialized ...`
 )
 
 var ExpectedSubDirectories = func() []string {
-	return []string{"controllers", "models", "utils", "commands"}
+	return []string{"controllers", "models", "utils", "commands", ".git"}
 }
 
 func NewInitCmd() *cobra.Command {
@@ -110,6 +117,16 @@ func initCmdExecute(cmd *cobra.Command, args []string) {
 	}
 
 	err = createRootCommandFile(cmd, expectedProjectPath, projectName, currentUser.Username, year)
+	if err != nil {
+		return
+	}
+
+	err = initializeGitRepo(cmd, expectedProjectPath)
+	if err != nil {
+		return
+	}
+
+	err = createGitIgnoreFileFile(cmd, expectedProjectPath, projectName, currentUser.Username, year)
 	if err != nil {
 		return
 	}
@@ -249,6 +266,95 @@ func createRootCommandFile(cmd *cobra.Command, expectedProjectPath string, proje
 
 	fmt.Fprintln(cmd.OutOrStdout())
 	fmt.Fprintf(cmd.OutOrStdout(), RootCommandGoFileIsCreated)
+
+	return nil
+}
+
+func initializeGitRepo(cmd *cobra.Command, expectedProjectPath string) error {
+	// initialize git repository inside folder
+
+	// get current directory
+	mydir, err := os.Getwd()
+	if err != nil {
+		fmt.Fprintln(cmd.OutOrStdout())
+		fmt.Fprintf(cmd.OutOrStdout(), GitInitExecutedError, err)
+		return err
+	}
+
+	err = os.Chdir(expectedProjectPath)
+	if err != nil {
+		fmt.Fprintln(cmd.OutOrStdout())
+		fmt.Fprintf(cmd.OutOrStdout(), GitInitExecutedError, err)
+		return err
+	}
+
+	// execute git init command
+	gitCmd := exec.Command("git")
+	gitCmd.Args = append(gitCmd.Args, "init")
+	//gitCmd.Args = append(gitCmd.Args, "--initial-branch=main")
+	gitErr := gitCmd.Start()
+	if gitErr != nil {
+		fmt.Fprintln(cmd.OutOrStdout())
+		fmt.Fprintf(cmd.OutOrStdout(), GitInitExecutedError, gitErr)
+		return gitErr
+	}
+	//gitErr := gitCmd.Run()
+
+	gitErr = gitCmd.Wait()
+	if gitErr != nil {
+		fmt.Fprintln(cmd.OutOrStdout())
+		fmt.Fprintf(cmd.OutOrStdout(), GitInitExecutedError, gitErr)
+		return gitErr
+	}
+
+	err = os.Chdir(mydir)
+	if err != nil {
+		fmt.Fprintln(cmd.OutOrStdout())
+		fmt.Fprintf(cmd.OutOrStdout(), GitInitExecutedError, err)
+		return err
+	}
+
+	fmt.Fprintln(cmd.OutOrStdout())
+	fmt.Fprintf(cmd.OutOrStdout(), GitInitExecuted)
+	return nil
+}
+
+func createGitIgnoreFileFile(cmd *cobra.Command, expectedProjectPath string, projectName string, creatorUsername string, year int) error {
+	// create .gitignore file from template and place it in the directory
+
+	gitignorePath := filepath.Join(expectedProjectPath, ".gitignore")
+	file, err := os.Create(gitignorePath)
+	if err != nil {
+		fmt.Fprintln(cmd.OutOrStdout())
+		fmt.Fprintf(cmd.OutOrStdout(), GitIgnoreFileIsNotCreated, err)
+		return err
+
+	}
+	defer file.Close()
+
+	temp := template.Must(template.ParseFiles("./templates/gitignore.gotmpl"))
+	goModuleVars := struct {
+		ProjectName     string
+		CreatorUserName string
+		Time            time.Time
+		TimeFormat      string
+		Year            int
+	}{
+		ProjectName:     projectName,
+		CreatorUserName: creatorUsername,
+		Time:            time.Now().Local(),
+		TimeFormat:      time.RFC822,
+		Year:            year,
+	}
+	err = temp.Execute(file, goModuleVars)
+	if err != nil {
+		fmt.Fprintln(cmd.OutOrStdout())
+		fmt.Fprintf(cmd.OutOrStdout(), GitIgnoreIsNotCreated, err)
+		return err
+	} else {
+		fmt.Fprintln(cmd.OutOrStdout())
+		fmt.Fprintf(cmd.OutOrStdout(), GitIgnoreFileIsCreated)
+	}
 
 	return nil
 }
