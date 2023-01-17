@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"sort"
 	"testing"
 )
 
@@ -18,7 +19,7 @@ func Test_ExecuteInitCmd(t *testing.T) {
 	initCmd.SetOut(b)
 
 	projectName := "test_project"
-	dirPath := "/tmp/"
+	dirPath := "/tmp"
 	// check the project folder is created
 	expectedPathToCheck := filepath.Join(dirPath, projectName)
 
@@ -40,9 +41,13 @@ func Test_ExecuteInitCmd(t *testing.T) {
 	expectedStr += "\n" + fmt.Sprintf(MainGoFileIsCreated)
 	expectedStr += "\n" + fmt.Sprintf(MainGoIsCreated)
 
-	for _, item := range ExpectedSubDirectories() {
+	sortedList := ExpectedSubDirectories()
+	sort.Strings(sortedList)
+
+	for _, item := range sortedList {
 		expectedStr += "\n" + fmt.Sprintf(SubDirectoryIsCreated, item)
 	}
+	expectedStr += "\n" + fmt.Sprintf(RootCommandGoFileIsCreated)
 
 	if string(out) != expectedStr {
 		t.Errorf("Expected %v, but got: %v", expectedStr, string(out))
@@ -56,7 +61,6 @@ func Test_ExecuteInitCmd(t *testing.T) {
 
 	// directory must contain `go.mod` file
 	goModePath := filepath.Join(expectedPathToCheck, "go.mod")
-	_, err = os.Stat(goModePath)
 	if _, err := os.Stat(goModePath); errors.Is(err, os.ErrNotExist) {
 		t.Errorf("Filename with the path of `%v` must be existed, but got err: %v", goModePath, err)
 		return
@@ -64,7 +68,6 @@ func Test_ExecuteInitCmd(t *testing.T) {
 
 	// directory must contain `main.go` file
 	mainGoPath := filepath.Join(expectedPathToCheck, "main.go")
-	_, err = os.Stat(mainGoPath)
 	if _, err := os.Stat(mainGoPath); errors.Is(err, os.ErrNotExist) {
 		t.Errorf("Filename with the path of `%v` must be existed, but got err: %v", mainGoPath, err)
 		return
@@ -77,14 +80,13 @@ func Test_ExecuteInitCmd(t *testing.T) {
 	}
 
 	var dirSubsName []string
-	expectedSubDirs := ExpectedSubDirectories()
 	for _, item := range dirs {
 		if item.IsDir() {
 			dirSubsName = append(dirSubsName, item.Name())
 		}
 	}
 
-	if !reflect.DeepEqual(dirSubsName, expectedSubDirs) {
-		t.Errorf("The List of Subdirectories --> Expected to be %v, but got %v", expectedSubDirs, dirSubsName)
+	if !reflect.DeepEqual(dirSubsName, sortedList) {
+		t.Errorf("The List of Subdirectories --> Expected to be %v, but got %v", sortedList, dirSubsName)
 	}
 }
