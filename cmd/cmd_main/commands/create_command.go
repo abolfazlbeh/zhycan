@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"text/template"
 	"time"
+	"zhycan/internal/config"
 )
 
 const (
@@ -78,8 +79,9 @@ func createCommandCmdExecute(cmd *cobra.Command, args []string) {
 	year := time.Now().Year()
 
 	// `commands` directory is existed --> create command file first
-	// TODO: get project name from config manager
-	createFileErr := createCommandFile(cmd, "", commandName,
+
+	projectName := config.GetManager().GetName()
+	createFileErr := createCommandFile(cmd, projectName, commandName,
 		currentUser.Username, year)
 	if createFileErr != nil {
 		return
