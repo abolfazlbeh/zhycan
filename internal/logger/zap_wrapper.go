@@ -136,7 +136,16 @@ func (l *ZapWrapper) Constructor(name string) error {
 		core := zapcore.NewTee(
 			cores...,
 		)
-		l.logger = zap.New(core, zap.AddStacktrace(zapcore.ErrorLevel))
+
+		if utils.ArrayContains(&optionArray, "stackTrace") && utils.ArrayContains(&optionArray, "caller") {
+			l.logger = zap.New(core, zap.AddStacktrace(zapcore.ErrorLevel), zap.AddCaller())
+		} else if utils.ArrayContains(&optionArray, "stackTrace") {
+			l.logger = zap.New(core, zap.AddStacktrace(zapcore.ErrorLevel))
+		} else if utils.ArrayContains(&optionArray, "caller") {
+			l.logger = zap.New(core, zap.AddCaller())
+		} else {
+			l.logger = zap.New(core)
+		}
 	} else { // otherwise we create a development version (`dev`, `test`, ...)
 		developmentEncoderConfig := zap.NewDevelopmentEncoderConfig()
 		developmentEncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
@@ -208,7 +217,16 @@ func (l *ZapWrapper) Constructor(name string) error {
 		core := zapcore.NewTee(
 			cores...,
 		)
-		l.logger = zap.New(core, zap.AddStacktrace(zapcore.ErrorLevel))
+
+		if utils.ArrayContains(&optionArray, "stackTrace") && utils.ArrayContains(&optionArray, "caller") {
+			l.logger = zap.New(core, zap.AddStacktrace(zapcore.ErrorLevel), zap.AddCaller())
+		} else if utils.ArrayContains(&optionArray, "stackTrace") {
+			l.logger = zap.New(core, zap.AddStacktrace(zapcore.ErrorLevel))
+		} else if utils.ArrayContains(&optionArray, "caller") {
+			l.logger = zap.New(core, zap.AddCaller())
+		} else {
+			l.logger = zap.New(core)
+		}
 	}
 
 	go l.runner()
