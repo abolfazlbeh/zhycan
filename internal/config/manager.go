@@ -303,3 +303,21 @@ func (p *manager) remoteConfigLoad(key string) ([]byte, error) {
 	//}
 	return nil, NewRemoteLoadErr(key, nil)
 }
+
+// ManualLoadConfig - load manual config from the path and add to the current dict
+func (p *manager) ManualLoadConfig(configBasePath string, configName string) error {
+	w := &ViperWrapper{
+		ConfigPath:          []string{configBasePath},
+		ConfigName:          configName,
+		ConfigResourcePlace: "",
+	}
+	err := w.Load()
+	if err == nil {
+		p.modules[configName] = w
+		p.modulesStatus[configName] = true
+	} else {
+		p.modulesStatus[configName] = false
+		return err
+	}
+	return nil
+}

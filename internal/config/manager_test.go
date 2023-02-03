@@ -83,6 +83,29 @@ func TestGetDifferentConfigs(t *testing.T) {
 	}
 }
 
+func TestManager_ManualLoadConfig(t *testing.T) {
+	err := createManager()
+	if err != nil {
+		t.Errorf("Creating Config Manager Caused Error --> Expected: %v, but got %v", nil, err)
+	}
+
+	// add logger to the manager
+	err = GetManager().ManualLoadConfig("/tmp/", "zh")
+	if err != nil {
+		t.Errorf("Manual loading config file --> Expected: %v, but got %v", nil, err)
+	}
+
+	expectedValue := "founded"
+	val, err := GetManager().Get("zh", "test")
+	if err != nil {
+		t.Errorf("Get config value from manual file the key is `test`, got error --> Expected: %v, but got %v", nil, err)
+	}
+
+	if !reflect.DeepEqual(expectedValue, val) {
+		t.Errorf("Expected the value of key `test` to be `%v`, but got `%v`", expectedValue, val)
+	}
+}
+
 func createManager() error {
 	path := "../.."
 	initialMode := "test"
