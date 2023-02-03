@@ -41,10 +41,19 @@ const (
 
 	GitInitExecutedError = `Zhycan > Cannot execute git init command ... %v`
 	GitInitExecuted      = `Zhycan > Git repository is initialized ...`
+
+	ConfigFileIsCreated       = `Zhycan > Config File "%s" is created ...`
+	ConfigFileIsNotCreated    = `Zhycan > Config File "%s" is not created ... %v`
+	ConfigDevFileIsCreated    = `Zhycan > Config File "%s" is created for "dev" mode ...`
+	ConfigDevFileIsNotCreated = `Zhycan > Config File "%s" is not created for "dev" mode ... %v`
 )
 
 var ExpectedSubDirectories = func() []string {
-	return []string{"controllers", "models", "utils", "commands", ".git"}
+	return []string{"controllers", "models", "utils", "commands", ".git", "configs"}
+}
+
+var ExpectedConfigFiles = func() []string {
+	return []string{"base", "logger"}
 }
 
 func NewInitCmd() *cobra.Command {
@@ -127,6 +136,11 @@ func initCmdExecute(cmd *cobra.Command, args []string) {
 	}
 
 	err = createGitIgnoreFileFile(cmd, expectedProjectPath, projectName, currentUser.Username, year)
+	if err != nil {
+		return
+	}
+
+	err = createAndCopyConfigFiles(cmd, expectedProjectPath, projectName)
 	if err != nil {
 		return
 	}
@@ -356,5 +370,73 @@ func createGitIgnoreFileFile(cmd *cobra.Command, expectedProjectPath string, pro
 		fmt.Fprintf(cmd.OutOrStdout(), GitIgnoreFileIsCreated)
 	}
 
+	return nil
+}
+
+func createAndCopyConfigFiles(cmd *cobra.Command, expectedProjectPath string, projectName string) error {
+	configs := ExpectedConfigFiles()
+	for _, item := range configs {
+		configFileName := fmt.Sprintf("%s_sample.json", item)
+		tmplFilename := fmt.Sprintf("./templates/%s.config.gotmpl", item)
+
+		_ = createOneConfigFile(cmd, expectedProjectPath, configFileName, tmplFilename)
+		_ = createOneDevConfigFile(cmd, expectedProjectPath, configFileName, tmplFilename, projectName)
+	}
+	return nil
+}
+
+func createOneConfigFile(cmd *cobra.Command, expectedProjectPath string, configFileName string, tmplFilename string) error {
+	configPath := filepath.Join(expectedProjectPath, "configs", configFileName)
+	file, err := os.Create(configPath)
+	if err != nil {
+		fmt.Fprintln(cmd.OutOrStdout())
+		fmt.Fprintf(cmd.OutOrStdout(), ConfigFileIsNotCreated, configFileName, err)
+		return err
+	}
+	defer file.Close()
+
+	temp := template.Must(template.ParseFiles(tmplFilename))
+	goModuleVars := struct {
+		ProjectName string
+	}{
+		ProjectName: "<project_name_here>",
+	}
+	err = temp.Execute(file, goModuleVars)
+	if err != nil {
+		fmt.Fprintln(cmd.OutOrStdout())
+		fmt.Fprintf(cmd.OutOrStdout(), ConfigFileIsNotCreated, configFileName, err)
+		return err
+	} else {
+		fmt.Fprintln(cmd.OutOrStdout())
+		fmt.Fprintf(cmd.OutOrStdout(), ConfigFileIsCreated, configFileName)
+	}
+	return nil
+}
+
+func createOneDevConfigFile(cmd *cobra.Command, expectedProjectPath string, configFileName string, tmplFilename string, projectName string) error {
+	configPath := filepath.Join(expectedProjectPath, "configs", "dev", configFileName)
+	file, err := os.Create(configPath)
+	if err != nil {
+		fmt.Fprintln(cmd.OutOrStdout())
+		fmt.Fprintf(cmd.OutOrStdout(), ConfigDevFileIsNotCreated, configFileName, err)
+		return err
+	}
+	defer file.Close()
+
+	temp := template.Must(template.ParseFiles(tmplFilename))
+	goModuleVars := struct {
+		ProjectName string
+	}{
+		ProjectName: projectName,
+	}
+	err = temp.Execute(file, goModuleVars)
+	if err != nil {
+		fmt.Fprintln(cmd.OutOrStdout())
+		fmt.Fprintf(cmd.OutOrStdout(), ConfigDevFileIsNotCreated, configFileName, err)
+		return err
+	} else {
+		fmt.Fprintln(cmd.OutOrStdout())
+		fmt.Fprintf(cmd.OutOrStdout(), ConfigDevFileIsCreated, configFileName)
+	}
 	return nil
 }
