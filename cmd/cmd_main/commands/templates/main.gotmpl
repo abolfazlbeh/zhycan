@@ -11,6 +11,8 @@ package main
 import (
     "fmt"
     "{{.ProjectName}}/commands"
+    "zhycan/internal/config"
+    "zhycan/internal/logger"
 )
 
 /*
@@ -18,5 +20,34 @@ The main file of the project
 */
 func main() {
     fmt.Println("{{.ProjectName}} is Started ...")
+
+    // config module attributes
+    baseConfigPath := "."           // the base path for the parameters. by default it's the current directory
+    initialConfigMode := "dev"            // it can be override by environment value --> the value can be `dev` and `prod` and whatever you want
+    configPrefix := "{{.ProjectName}}"    // this will be used in reading value from environment with this prefix
+
+    err := config.CreateManager(baseConfigPath, initialConfigMode, configPrefix)
+    if err != nil {
+        fmt.Println(err)
+        return
+    }
+
+    // Wait for all config files initialized
+    for {
+        flag := config.GetManager().IsInitialized()
+        if flag {
+            break
+        }
+        time.Sleep(200 * time.Millisecond)
+    }
+
+    // Testing the logger module works properly
+	l, _ := logger.GetManager().GetLogger()
+	if l != nil {
+		l.Log(logger.NewLogObject(
+			logger.INFO, "Logger Module Works Like A Charm ...", logger.FuncMaintenanceType, time.Now().UTC(), "", nil))
+	}
+
+    // Execute the provided command
     commands.Execute()
 }
