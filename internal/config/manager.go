@@ -109,20 +109,22 @@ func constructor(configBasePath string, configInitialMode string, configEnvPrefi
 // loadModules - Loads All Modules That is configured in "init" config file
 func (p *manager) loadModules() {
 	log.Println("Load All Modules Config ...")
-	modules := viper.GetStringSlice("modules")
-	// TODO: in future it must support the remote version
-	for _, item := range modules {
+	modules := viper.Get("modules")
+
+	for _, item := range modules.([]map[string]interface{}) {
+		name := item["name"].(string)
+
 		w := &ViperWrapper{
 			ConfigPath:          []string{fmt.Sprintf("%s/configs/%s/", p.configBasePath, p.configMode)},
-			ConfigName:          item,
-			ConfigResourcePlace: "",
+			ConfigName:          item["name"].(string),
+			ConfigResourcePlace: item["type"].(string),
 		}
 		err := w.Load()
 		if err == nil {
-			p.modules[item] = w
-			p.modulesStatus[item] = true
+			p.modules[name] = w
+			p.modulesStatus[name] = true
 		} else {
-			p.modulesStatus[item] = false
+			p.modulesStatus[name] = false
 		}
 	}
 	//else if src == "remote" {

@@ -51,6 +51,11 @@ func Test_ExecuteInitCmd(t *testing.T) {
 	expectedStr += "\n" + fmt.Sprintf(GitInitExecuted)
 	expectedStr += "\n" + fmt.Sprintf(GitIgnoreFileIsCreated)
 
+	for _, item := range ExpectedConfigFiles() {
+		expectedStr += "\n" + fmt.Sprintf(ConfigFileIsCreated, fmt.Sprintf("%s.json", item))
+		expectedStr += "\n" + fmt.Sprintf(ConfigDevFileIsCreated, fmt.Sprintf("%s.json", item))
+	}
+
 	if string(out) != expectedStr {
 		t.Errorf("Expected %v, but got: %v", expectedStr, string(out))
 		return
