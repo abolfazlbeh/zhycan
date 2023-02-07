@@ -1,0 +1,11 @@
+{
+  "filter_operations": ["create", "move", "remove", "rename", "write"],
+  "filter_hooks": [".*.go$"],
+  "watch_dirs": [
+    {"path":  ".", "recursive": true},
+    {"path":  "controllers", "recursive": false}
+  ],
+  "max_event": 1,
+  "print_watched_files": true,
+  "watch_interval": 100
+}

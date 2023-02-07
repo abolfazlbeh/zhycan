@@ -111,7 +111,8 @@ func (p *manager) loadModules() {
 	log.Println("Load All Modules Config ...")
 	modules := viper.Get("modules")
 
-	for _, item := range modules.([]map[string]interface{}) {
+	for _, item2 := range modules.([]interface{}) {
+		item := item2.(map[string]interface{})
 		name := item["name"].(string)
 
 		w := &ViperWrapper{
@@ -119,6 +120,7 @@ func (p *manager) loadModules() {
 			ConfigName:          item["name"].(string),
 			ConfigResourcePlace: item["type"].(string),
 		}
+
 		err := w.Load()
 		if err == nil {
 			p.modules[name] = w
@@ -313,6 +315,7 @@ func (p *manager) ManualLoadConfig(configBasePath string, configName string) err
 		ConfigName:          configName,
 		ConfigResourcePlace: "",
 	}
+
 	err := w.Load()
 	if err == nil {
 		p.modules[configName] = w
