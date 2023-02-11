@@ -5,6 +5,7 @@
   "config_remote_infra": "grpc",
   "config_remote_duration": 300,
   "modules": [
-    {"name":"logger", "type": "local"}
+    {"name":"logger", "type": "local"},
+    {"name":"http", "type": "local"}
   ]
 }
