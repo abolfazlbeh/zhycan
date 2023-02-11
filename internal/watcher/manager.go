@@ -82,7 +82,7 @@ func (m *manager) init() {
 	}
 	m.printWatchedFiles = printWatchedFiles.(bool)
 
-	watchInterval, err := config.GetManager().Get(m.name, "print_watched_files")
+	watchInterval, err := config.GetManager().Get(m.name, "watch_interval")
 	if err != nil {
 		return
 	}
@@ -164,6 +164,8 @@ func (m *manager) restartOnChangeConfig() {
 			m.Start()
 			return nil
 		})
+	} else {
+		// TODO: make some logs
 	}
 }
 
