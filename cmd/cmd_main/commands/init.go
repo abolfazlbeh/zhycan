@@ -12,48 +12,19 @@ import (
 	"time"
 )
 
-const (
-	DefaultProjectDirectory = "."
-
-	InitializeMessage         = `Zhycan > Create project skeleton ...`
-	RootDirectoryIsCreated    = `Zhycan > Project root (%s) is created ...`
-	RootDirectoryIsNotCreated = `Zhycan > Project root (%s) is not created correctly ...%v`
-	GoModuleFileIsCreated     = `Zhycan > Go Module File "go.mod" is created ...`
-	GoModuleFileIsNotCreated  = `Zhycan > Go Module File "go.mod" is not created ... %v`
-	GoModuleIsCreated         = `Zhycan > Go Module "go.mod" is filled ...`
-	GoModuleIsNotCreated      = `Zhycan > Go Module "go.mod" is not filled ... %v`
-	MainGoFileIsCreated       = `Zhycan > Main program File "main.go" is created ...`
-	MainGoFileIsNotCreated    = `Zhycan > Main program File "main.go" is not created ... %v`
-	MainGoIsCreated           = `Zhycan > Main program "main.go" is filled ...`
-	MainGoIsNotCreated        = `Zhycan > Main program "main.go" is not filled ... %v`
-	UserExisted               = "Zhycan > User existed ..."
-	UserNotExisted            = "Zhycan > User not existed ... %v"
-	SubDirectoryIsNotCreated  = `Zhycan > Sub directory "%s" cannot be created ... %v`
-	SubDirectoryIsCreated     = `Zhycan > Sub directory "%s" is created ...`
-
-	RootCommandGoFileIsCreated    = `Zhycan > Root command File "commands/root.go" is created ...`
-	RootCommandGoFileIsNotCreated = `Zhycan > Root command File "commands/root.go" is not created ... %v`
-	RootCommandGoIsNotCreated     = `Zhycan > Root command "commands/root.go" is not filled ... %v`
-
-	GitIgnoreFileIsCreated    = `Zhycan > Git Ignore File ".gitignore" is created ...`
-	GitIgnoreFileIsNotCreated = `Zhycan > Git Ignore File ".gitignore" is not created ... %v`
-	GitIgnoreIsNotCreated     = `Zhycan > Git Ignore ".gitignore" is not filled ... %v`
-
-	GitInitExecutedError = `Zhycan > Cannot execute git init command ... %v`
-	GitInitExecuted      = `Zhycan > Git repository is initialized ...`
-
-	ConfigFileIsCreated       = `Zhycan > Config File "%s" is created ...`
-	ConfigFileIsNotCreated    = `Zhycan > Config File "%s" is not created ... %v`
-	ConfigDevFileIsCreated    = `Zhycan > Config File "%s" is created for "dev" mode ...`
-	ConfigDevFileIsNotCreated = `Zhycan > Config File "%s" is not created for "dev" mode ... %v`
-)
-
 var ExpectedSubDirectories = func() []string {
 	return []string{"controllers", "models", "utils", "commands", ".git", "configs"}
 }
 
 var ExpectedConfigFiles = func() []string {
 	return []string{"base", "logger"}
+}
+
+var ExpectedConfigContentTmpl = func() map[string]string {
+	return map[string]string{
+		"base":   BaseConfigTmpl,
+		"logger": LoggerConfigTmpl,
+	}
 }
 
 func NewInitCmd() *cobra.Command {
@@ -161,7 +132,8 @@ func createGoModFile(cmd *cobra.Command, expectedProjectPath string, projectName
 	}
 	defer file.Close()
 
-	temp := template.Must(template.ParseFiles("./templates/gomod.gotmpl"))
+	temp := template.Must(template.New("").Parse(GoModTmpl))
+	//temp := template.Must(template.ParseFiles("./templates/gomod.gotmpl"))
 	goModuleVars := struct {
 		ProjectName string
 		Version     string
@@ -197,7 +169,8 @@ func createMainGoFile(cmd *cobra.Command, expectedProjectPath string, projectNam
 	}
 	defer file.Close()
 
-	temp := template.Must(template.ParseFiles("./templates/main.gotmpl"))
+	temp := template.Must(template.New("").Parse(MainTmpl))
+	//temp := template.Must(template.ParseFiles("./templates/main.gotmpl"))
 	goModuleVars := struct {
 		ProjectName     string
 		CreatorUserName string
@@ -257,7 +230,8 @@ func createRootCommandFile(cmd *cobra.Command, expectedProjectPath string, proje
 	}
 	defer file.Close()
 
-	temp := template.Must(template.ParseFiles("./templates/root_command.gotmpl"))
+	temp := template.Must(template.New("").Parse(RootCommandTmpl))
+	//temp := template.Must(template.ParseFiles("./templates/root_command.gotmpl"))
 	goModuleVars := struct {
 		ProjectName     string
 		CreatorUserName string
@@ -346,7 +320,8 @@ func createGitIgnoreFileFile(cmd *cobra.Command, expectedProjectPath string, pro
 	}
 	defer file.Close()
 
-	temp := template.Must(template.ParseFiles("./templates/gitignore.gotmpl"))
+	temp := template.Must(template.New("").Parse(GitIgnoreTmpl))
+	//temp := template.Must(template.ParseFiles("./templates/gitignore.gotmpl"))
 	goModuleVars := struct {
 		ProjectName     string
 		CreatorUserName string
@@ -377,15 +352,20 @@ func createAndCopyConfigFiles(cmd *cobra.Command, expectedProjectPath string, pr
 	configs := ExpectedConfigFiles()
 	for _, item := range configs {
 		configFileName := fmt.Sprintf("%s_sample.json", item)
-		tmplFilename := fmt.Sprintf("./templates/%s.config.gotmpl", item)
+		configDevFileName := fmt.Sprintf("%s.json", item)
+		//tmplFilename := fmt.Sprintf("./templates/%s.config.gotmpl", item)
 
-		_ = createOneConfigFile(cmd, expectedProjectPath, configFileName, tmplFilename)
-		_ = createOneDevConfigFile(cmd, expectedProjectPath, configFileName, tmplFilename, projectName)
+		tmplContent := ExpectedConfigContentTmpl()[item]
+
+		//_ = createOneConfigFile(cmd, expectedProjectPath, configFileName, tmplFilename)
+		//_ = createOneDevConfigFile(cmd, expectedProjectPath, configDevFileName, tmplFilename, projectName)
+		_ = createOneConfigFile(cmd, expectedProjectPath, configFileName, tmplContent)
+		_ = createOneDevConfigFile(cmd, expectedProjectPath, configDevFileName, tmplContent, projectName)
 	}
 	return nil
 }
 
-func createOneConfigFile(cmd *cobra.Command, expectedProjectPath string, configFileName string, tmplFilename string) error {
+func createOneConfigFile(cmd *cobra.Command, expectedProjectPath string, configFileName string, tmplFile string) error {
 	configPath := filepath.Join(expectedProjectPath, "configs", configFileName)
 	file, err := os.Create(configPath)
 	if err != nil {
@@ -395,7 +375,8 @@ func createOneConfigFile(cmd *cobra.Command, expectedProjectPath string, configF
 	}
 	defer file.Close()
 
-	temp := template.Must(template.ParseFiles(tmplFilename))
+	//temp := template.Must(template.ParseFiles(tmplFilename))
+	temp := template.Must(template.New("").Parse(tmplFile))
 	goModuleVars := struct {
 		ProjectName string
 	}{
@@ -413,7 +394,7 @@ func createOneConfigFile(cmd *cobra.Command, expectedProjectPath string, configF
 	return nil
 }
 
-func createOneDevConfigFile(cmd *cobra.Command, expectedProjectPath string, configFileName string, tmplFilename string, projectName string) error {
+func createOneDevConfigFile(cmd *cobra.Command, expectedProjectPath string, configFileName string, tmplFile string, projectName string) error {
 	configPath := filepath.Join(expectedProjectPath, "configs", "dev", configFileName)
 	file, err := os.Create(configPath)
 	if err != nil {
@@ -423,7 +404,8 @@ func createOneDevConfigFile(cmd *cobra.Command, expectedProjectPath string, conf
 	}
 	defer file.Close()
 
-	temp := template.Must(template.ParseFiles(tmplFilename))
+	//temp := template.Must(template.ParseFiles(tmplFilename))
+	temp := template.Must(template.New("").Parse(tmplFile))
 	goModuleVars := struct {
 		ProjectName string
 	}{
