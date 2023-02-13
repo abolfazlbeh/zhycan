@@ -44,7 +44,7 @@ func (m *manager) init() {
 			continue
 		}
 
-		obj := ServerConfig{}
+		var obj ServerConfig
 		err := json.Unmarshal(jsonBody, &obj)
 		if err == nil {
 			server, err1 := NewServer(obj)
