@@ -18,6 +18,8 @@ const (
 	UserNotExisted            = "Zhycan > User not existed ... %v"
 	SubDirectoryIsNotCreated  = `Zhycan > Sub directory "%s" cannot be created ... %v`
 	SubDirectoryIsCreated     = `Zhycan > Sub directory "%s" is created ...`
+	AppControllerIsNotCreated = `Zhycan > App "controller.go" cannot be created ... %v`
+	AppControllerIsCreated    = `Zhycan > App "controller.go" is created ...`
 
 	RootCommandGoFileIsCreated    = `Zhycan > Root command File "commands/root.go" is created ...`
 	RootCommandGoFileIsNotCreated = `Zhycan > Root command File "commands/root.go" is not created ... %v`
@@ -302,4 +304,28 @@ DerivedData/
     "ctype": "tcp"
   }
 }`
+
+	AppControllerTmpl = `/*
+Create By Zhycan Framework
+
+Copyright © {{.Year}}
+Project: {{.ProjectName}}
+File: "app/controller.go" --> {{ .Time.Format .TimeFormat }} by {{.CreatorUserName}}
+------------------------------
+*/
+
+package app
+
+// MARK: Controller
+
+// SampleController - a sample controller to show the functionality
+type SampleController struct {}
+
+
+// GetHello - just return the 'Hello World' string to user
+func (ctrl *SampleController) GetHello(c *fiber.Ctx) error {
+    return c.SendString("Hello World")
+}
+
+`
 )

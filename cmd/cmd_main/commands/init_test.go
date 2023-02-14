@@ -56,6 +56,9 @@ func Test_ExecuteInitCmd(t *testing.T) {
 		expectedStr += "\n" + fmt.Sprintf(ConfigDevFileIsCreated, fmt.Sprintf("%s.json", item))
 	}
 
+	// Check the app files creation
+	expectedStr += "\n" + fmt.Sprintf(AppControllerIsCreated)
+
 	if string(out) != expectedStr {
 		t.Errorf("Expected %v, but got: %v", expectedStr, string(out))
 		return
