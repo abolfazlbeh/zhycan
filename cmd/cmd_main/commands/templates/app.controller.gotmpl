@@ -1,0 +1,21 @@
+/*
+Create By Zhycan Framework
+
+Copyright © {{.Year}}
+Project: {{.ProjectName}}
+File: `app/controller.go` --> {{ .Time.Format .TimeFormat }} by {{.CreatorUserName}}
+------------------------------
+*/
+
+package app
+
+// MARK: Controller
+
+// SampleController - a sample controller to show the functionality
+type SampleController struct {}
+
+
+// GetHello - just return the 'Hello World' string to user
+func (ctrl *SampleController) GetHello(c *fiber.Ctx) error {
+    return c.SendString("Hello World")
+}

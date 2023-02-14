@@ -13,7 +13,7 @@ import (
 )
 
 var ExpectedSubDirectories = func() []string {
-	return []string{"controllers", "models", "utils", "commands", ".git", "configs"}
+	return []string{"app", "commands", ".git", "configs"}
 }
 
 var ExpectedConfigFiles = func() []string {
@@ -115,6 +115,58 @@ func initCmdExecute(cmd *cobra.Command, args []string) {
 	if err != nil {
 		return
 	}
+
+	err = createAppDirFiles(cmd, expectedProjectPath, projectName, currentUser.Username, year)
+	if err != nil {
+		return
+	}
+}
+
+func createAppDirFiles(cmd *cobra.Command, expectedProjectPath string, projectName string, username string, year int) error {
+	err := createAppController(cmd, expectedProjectPath, projectName, username, year)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func createAppController(cmd *cobra.Command, expectedProjectPath string, projectName string, username string, year int) error {
+	mainGoPath := filepath.Join(expectedProjectPath, "app", "controller.go")
+	file, err := os.Create(mainGoPath)
+	if err != nil {
+		fmt.Fprintln(cmd.OutOrStdout())
+		fmt.Fprintf(cmd.OutOrStdout(), AppControllerIsNotCreated, err)
+		return err
+	}
+	defer file.Close()
+
+	temp := template.Must(template.New("").Parse(AppControllerTmpl))
+	//temp := template.Must(template.ParseFiles("./templates/app.controller.gotmpl"))
+	goModuleVars := struct {
+		ProjectName     string
+		CreatorUserName string
+		Time            time.Time
+		TimeFormat      string
+		Year            int
+	}{
+		ProjectName:     projectName,
+		CreatorUserName: username,
+		Time:            time.Now().Local(),
+		TimeFormat:      time.RFC822,
+		Year:            year,
+	}
+	err = temp.Execute(file, goModuleVars)
+	if err != nil {
+		fmt.Fprintln(cmd.OutOrStdout())
+		fmt.Fprintf(cmd.OutOrStdout(), AppControllerIsNotCreated, err)
+		return err
+	} else {
+		fmt.Fprintln(cmd.OutOrStdout())
+		fmt.Fprintf(cmd.OutOrStdout(), AppControllerIsCreated)
+	}
+
+	return nil
 }
 
 func createGoModFile(cmd *cobra.Command, expectedProjectPath string, projectName string, goVersion string) error {
