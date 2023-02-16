@@ -2,6 +2,7 @@ package http
 
 type ServerConfig struct {
 	ListenAddress string `json:"addr"`
+	Name          string `json:"name"`
 	Config        struct {
 		ServerHeader         string `json:"server_header"`
 		StrictRouting        bool   `json:"strict_routing"`

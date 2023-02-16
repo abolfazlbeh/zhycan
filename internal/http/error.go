@@ -61,3 +61,33 @@ func (err *ShutdownServerErr) Error() string {
 func NewShutdownServerErr(err error) error {
 	return &ShutdownServerErr{Err: err}
 }
+
+// NotSupportedHttpMethodErr Error
+type NotSupportedHttpMethodErr struct {
+	method string
+}
+
+// Error method - satisfying error interface
+func (err *NotSupportedHttpMethodErr) Error() string {
+	return fmt.Sprintf("This method '%v' is not supported", err.method)
+}
+
+// NewNotSupportedHttpMethodErr - return a new instance of NotSupportedHttpMethodErr
+func NewNotSupportedHttpMethodErr(method string) error {
+	return &NotSupportedHttpMethodErr{method: method}
+}
+
+// AddRouteToNilServerErr Error
+type AddRouteToNilServerErr struct {
+	route string
+}
+
+// Error method - satisfying error interface
+func (err *AddRouteToNilServerErr) Error() string {
+	return fmt.Sprintf("There is no server to add route: %v", err.route)
+}
+
+// NewAddRouteToNilServerErr - return a new instance of AddRouteToNilServerErr
+func NewAddRouteToNilServerErr(route string) error {
+	return &AddRouteToNilServerErr{route: route}
+}
