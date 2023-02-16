@@ -137,3 +137,20 @@ func (m *manager) AddRoute(method string, path string, f func(c *fiber.Ctx) erro
 	}
 	return NewAddRouteToNilServerErr(path)
 }
+
+func (m *manager) GetRouteByName(routeName string, serverName ...string) (*fiber.Route, error) {
+	if len(serverName) > 1 {
+		return nil, NewFromMultipleServerErr()
+	} else if len(serverName) == 1 {
+		for _, sn := range serverName {
+			if s, ok := m.servers[sn]; ok {
+				return s.GetRouteByName(routeName)
+			}
+		}
+	} else {
+		if m.defaultServer != "" {
+			return m.servers[m.defaultServer].GetRouteByName(routeName)
+		}
+	}
+	return nil, NewFromNilServerErr()
+}

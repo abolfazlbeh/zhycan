@@ -114,6 +114,49 @@ func TestManager_AddRouteToSpecificServer(t *testing.T) {
 	}
 }
 
+func TestManager_GetRouteByName(t *testing.T) {
+	makeReadyConfigManager()
+
+	// Get the first server
+	m := GetManager()
+	if len(m.servers) == 0 {
+		t.Errorf("Expected manager to have at least one server, got '%d'", len(m.servers))
+		return
+	}
+
+	serverName := "s1"
+	routeName := "TestGet"
+	err := m.AddRoute(fiber.MethodGet, "/", func(c *fiber.Ctx) error {
+		return nil
+	}, routeName, serverName)
+	if err != nil {
+		t.Errorf("Adding route to server expected to return %v, but got %v", nil, err)
+		return
+	}
+
+	route, err := m.GetRouteByName(routeName)
+	if err != nil {
+		t.Errorf("Error Get route of server by name, expected %v, but got %v", nil, err)
+		return
+	}
+
+	if route.Name != routeName {
+		t.Errorf("Expected to get the route name %v, but got %v", routeName, route.Name)
+		return
+	}
+
+	route1, err := m.GetRouteByName(routeName, serverName)
+	if err != nil {
+		t.Errorf("Error Get route of server by name, expected %v, but got %v", nil, err)
+		return
+	}
+
+	if route1.Name != routeName {
+		t.Errorf("Expected to get the route name %v, but got %v", routeName, route1.Name)
+		return
+	}
+}
+
 func makeReadyConfigManager() {
 	path := "../.."
 	initialMode := "test"

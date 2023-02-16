@@ -63,3 +63,11 @@ func (s *Server) AddRoute(method string, path string, f func(c *fiber.Ctx) error
 
 	return NewNotSupportedHttpMethodErr(method)
 }
+
+func (s *Server) GetRouteByName(name string) (*fiber.Route, error) {
+	route := s.app.GetRoute(name)
+	if route.Name != name {
+		return nil, NewGetRouteByNameErr(name)
+	}
+	return &route, nil
+}

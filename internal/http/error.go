@@ -91,3 +91,46 @@ func (err *AddRouteToNilServerErr) Error() string {
 func NewAddRouteToNilServerErr(route string) error {
 	return &AddRouteToNilServerErr{route: route}
 }
+
+// GetRouteByNameErr Error
+type GetRouteByNameErr struct {
+	name string
+}
+
+// Error method - satisfying error interface
+func (err *GetRouteByNameErr) Error() string {
+	return fmt.Sprintf("There is no route be the name: %v", err.name)
+}
+
+// NewGetRouteByNameErr - return a new instance of GetRouteByNameErr
+func NewGetRouteByNameErr(name string) error {
+	return &GetRouteByNameErr{name: name}
+}
+
+// FromNilServerErr Error
+type FromNilServerErr struct {
+}
+
+// Error method - satisfying error interface
+func (err *FromNilServerErr) Error() string {
+	return fmt.Sprintf("There is no server to operate")
+}
+
+// NewFromNilServerErr - return a new instance of FromNilServerErr
+func NewFromNilServerErr() error {
+	return &FromNilServerErr{}
+}
+
+// FromMultipleServerErr Error
+type FromMultipleServerErr struct {
+}
+
+// Error method - satisfying error interface
+func (err *FromMultipleServerErr) Error() string {
+	return fmt.Sprintf("There are more than one server to operate")
+}
+
+// NewFromMultipleServerErr - return a new instance of FromMultipleServerErr
+func NewFromMultipleServerErr() error {
+	return &FromMultipleServerErr{}
+}
