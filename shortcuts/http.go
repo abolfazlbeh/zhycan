@@ -46,3 +46,7 @@ func AddBulkHttpRoutes(httpRoutes []HttpRoute) error {
 	}
 	return nil
 }
+
+func GetRouteByName(routeName string, serverName ...string) (*fiber.Route, error) {
+	return http.GetManager().GetRouteByName(routeName, serverName...)
+}
