@@ -1,6 +1,8 @@
 {
+  "default": "s1",
   "servers": [
     {
+      "name":                   "s1",
       "addr": ":3000",
       "conf": {
         "server_header": "",

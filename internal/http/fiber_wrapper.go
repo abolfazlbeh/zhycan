@@ -1,6 +1,9 @@
 package http
 
-import "github.com/gofiber/fiber/v2"
+import (
+	"github.com/gofiber/fiber/v2"
+	"zhycan/internal/utils"
+)
 
 // Mark: Definitions
 
@@ -47,4 +50,16 @@ func (s *Server) Stop() error {
 		return NewShutdownServerErr(err)
 	}
 	return nil
+}
+
+// AddRoute - add a route to the server
+func (s *Server) AddRoute(method string, path string, f func(c *fiber.Ctx) error, routeName string) error {
+	// check that whether is acceptable to add this route method
+	if utils.ArrayContains(&fiber.DefaultMethods, method) {
+		s.app.Add(method, path, f)
+		s.app.Name(routeName)
+		return nil
+	}
+
+	return NewNotSupportedHttpMethodErr(method)
 }

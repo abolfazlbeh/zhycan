@@ -1,6 +1,7 @@
 package http
 
 import (
+	"github.com/gofiber/fiber/v2"
 	"reflect"
 	"testing"
 	"zhycan/internal/config"
@@ -58,15 +59,59 @@ func TestManager_CheckServerConfig(t *testing.T) {
 
 	// check the configs
 	expectedAddress := ":3000"
-	if !reflect.DeepEqual(m.servers[0].config.ListenAddress, expectedAddress) {
-		t.Errorf("Expected the Addr of the first server to be %v, but got %v", expectedAddress, m.servers[0].config.ListenAddress)
+	if !reflect.DeepEqual(m.servers[m.defaultServer].config.ListenAddress, expectedAddress) {
+		t.Errorf("Expected the Addr of the first server to be %v, but got %v", expectedAddress, m.servers[m.defaultServer].config.ListenAddress)
 	}
 
 	expectedVal := ".gz"
-	if !reflect.DeepEqual(m.servers[0].config.Config.CompressedFileSuffix, expectedVal) {
-		t.Errorf("Expected the config val of the first server to be %v, but got %v", expectedVal, m.servers[0].config.Config.CompressedFileSuffix)
+	if !reflect.DeepEqual(m.servers[m.defaultServer].config.Config.CompressedFileSuffix, expectedVal) {
+		t.Errorf("Expected the config val of the first server to be %v, but got %v", expectedVal, m.servers[m.defaultServer].config.Config.CompressedFileSuffix)
 	}
 
+}
+
+func TestManager_AddRoute(t *testing.T) {
+	makeReadyConfigManager()
+
+	// Get the first server
+	m := GetManager()
+	if len(m.servers) == 0 {
+		t.Errorf("Expected manager to have at least one server, got '%d'", len(m.servers))
+	}
+
+	err := m.AddRoute(fiber.MethodGet, "/", func(c *fiber.Ctx) error {
+		return nil
+	}, "TestGet")
+	if err != nil {
+		t.Errorf("Adding route to server expected to return %v, but got %v", nil, err)
+	}
+
+	routes := m.servers[m.defaultServer].app.GetRoutes()
+	if len(routes) == 0 {
+		t.Errorf("Expected 1 routes added to server, but got %v", len(routes))
+	}
+}
+
+func TestManager_AddRouteToSpecificServer(t *testing.T) {
+	makeReadyConfigManager()
+
+	// Get the first server
+	m := GetManager()
+	if len(m.servers) == 0 {
+		t.Errorf("Expected manager to have at least one server, got '%d'", len(m.servers))
+	}
+
+	err := m.AddRoute(fiber.MethodGet, "/", func(c *fiber.Ctx) error {
+		return nil
+	}, "TestGet", "s1")
+	if err != nil {
+		t.Errorf("Adding route to server expected to return %v, but got %v", nil, err)
+	}
+
+	routes := m.servers["s1"].app.GetRoutes()
+	if len(routes) == 0 {
+		t.Errorf("Expected 1 routes added to server %v, but got %v", "s1", len(routes))
+	}
 }
 
 func makeReadyConfigManager() {

@@ -1,7 +1,9 @@
 {
+  "default": "s1",
   "servers": [
     {
       "addr": ":3000",
+      "name":                   "s1",
       "conf": {
         "server_header": "",
         "strict_routing": false,

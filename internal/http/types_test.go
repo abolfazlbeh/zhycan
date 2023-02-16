@@ -9,6 +9,7 @@ func TestServerConfig_UnmarshalJson(t *testing.T) {
 	// Test input data
 	input := []byte(`{
       "addr":                   ":3000",
+      "name":                   "s1",
       "conf": {
         "server_header": "",
         "strict_routing": false,
@@ -34,6 +35,7 @@ func TestServerConfig_UnmarshalJson(t *testing.T) {
 	// Test expected result
 	expected := ServerConfig{
 		ListenAddress: ":3000",
+		Name:          "s1",
 		Config: struct {
 			ServerHeader         string `json:"server_header"`
 			StrictRouting        bool   `json:"strict_routing"`

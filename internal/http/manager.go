@@ -2,18 +2,21 @@ package http
 
 import (
 	"encoding/json"
+	"github.com/gofiber/fiber/v2"
 	"log"
 	"sync"
 	"zhycan/internal/config"
+	"zhycan/internal/utils"
 )
 
 // Mark: manager
 
 // manager object
 type manager struct {
-	name    string
-	lock    sync.Mutex
-	servers []*Server
+	name          string
+	lock          sync.Mutex
+	servers       map[string]*Server
+	defaultServer string
 }
 
 // MARK: Module variables
@@ -38,6 +41,9 @@ func (m *manager) init() {
 		return
 	}
 
+	var serverNames []string
+	m.servers = make(map[string]*Server)
+
 	for _, item := range serversCfg.([]interface{}) {
 		jsonBody, err2 := json.Marshal(item)
 		if err2 != nil {
@@ -49,8 +55,19 @@ func (m *manager) init() {
 		if err == nil {
 			server, err1 := NewServer(obj)
 			if err1 == nil {
-				m.servers = append(m.servers, server)
+				m.servers[obj.Name] = server
+
+				serverNames = append(serverNames, obj.Name)
 			}
+		}
+	}
+
+	defaultS, err := config.GetManager().Get(m.name, "default")
+	if err == nil {
+		if utils.ArrayContains(&serverNames, defaultS.(string)) {
+			m.defaultServer = defaultS.(string)
+		} else if len(serverNames) > 0 {
+			m.defaultServer = serverNames[0]
 		}
 	}
 }
@@ -103,4 +120,20 @@ func (m *manager) StartServers() error {
 // StopServers - iterate over all severs and stop them
 func (m *manager) StopServers() error {
 	return NewNotImplementedErr()
+}
+
+// AddRoute - add a route to the server with specified name
+func (m *manager) AddRoute(method string, path string, f func(c *fiber.Ctx) error, routeName string, serverName ...string) error {
+	if len(serverName) > 0 {
+		for _, sn := range serverName {
+			if s, ok := m.servers[sn]; ok {
+				return s.AddRoute(method, path, f, routeName)
+			}
+		}
+	} else {
+		if m.defaultServer != "" {
+			return m.servers[m.defaultServer].AddRoute(method, path, f, routeName)
+		}
+	}
+	return NewAddRouteToNilServerErr(path)
 }
