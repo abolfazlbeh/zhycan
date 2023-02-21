@@ -22,8 +22,9 @@ var ExpectedConfigFiles = func() []string {
 
 var ExpectedConfigContentTmpl = func() map[string]string {
 	return map[string]string{
-		"base":   BaseConfigTmpl,
-		"logger": LoggerConfigTmpl,
+		"base":   baseConfigTmpl,
+		"logger": loggerConfigTmpl,
+		"http":   httpConfigTmpl,
 	}
 }
 
@@ -131,6 +132,44 @@ func createAppDirFiles(cmd *cobra.Command, expectedProjectPath string, projectNa
 	return nil
 }
 
+func createAppEngine(cmd *cobra.Command, expectedProjectPath string, projectName string, username string, year int) error {
+	mainGoPath := filepath.Join(expectedProjectPath, "app", "app.go")
+	file, err := os.Create(mainGoPath)
+	if err != nil {
+		fmt.Fprintln(cmd.OutOrStdout())
+		fmt.Fprintf(cmd.OutOrStdout(), AppEngineIsNotCreated, err)
+		return err
+	}
+	defer file.Close()
+
+	temp := template.Must(template.New("").Parse(appEngineTmpl))
+	//temp := template.Must(template.ParseFiles("./templates/app.app.gotmpl"))
+	goModuleVars := struct {
+		ProjectName     string
+		CreatorUserName string
+		Time            time.Time
+		TimeFormat      string
+		Year            int
+	}{
+		ProjectName:     projectName,
+		CreatorUserName: username,
+		Time:            time.Now().Local(),
+		TimeFormat:      time.RFC822,
+		Year:            year,
+	}
+	err = temp.Execute(file, goModuleVars)
+	if err != nil {
+		fmt.Fprintln(cmd.OutOrStdout())
+		fmt.Fprintf(cmd.OutOrStdout(), AppEngineIsNotCreated, err)
+		return err
+	} else {
+		fmt.Fprintln(cmd.OutOrStdout())
+		fmt.Fprintf(cmd.OutOrStdout(), AppEngineIsCreated)
+	}
+
+	return nil
+}
+
 func createAppController(cmd *cobra.Command, expectedProjectPath string, projectName string, username string, year int) error {
 	mainGoPath := filepath.Join(expectedProjectPath, "app", "controller.go")
 	file, err := os.Create(mainGoPath)
@@ -141,7 +180,7 @@ func createAppController(cmd *cobra.Command, expectedProjectPath string, project
 	}
 	defer file.Close()
 
-	temp := template.Must(template.New("").Parse(AppControllerTmpl))
+	temp := template.Must(template.New("").Parse(appControllerTmpl))
 	//temp := template.Must(template.ParseFiles("./templates/app.controller.gotmpl"))
 	goModuleVars := struct {
 		ProjectName     string
@@ -184,7 +223,7 @@ func createGoModFile(cmd *cobra.Command, expectedProjectPath string, projectName
 	}
 	defer file.Close()
 
-	temp := template.Must(template.New("").Parse(GoModTmpl))
+	temp := template.Must(template.New("").Parse(goModTmpl))
 	//temp := template.Must(template.ParseFiles("./templates/gomod.gotmpl"))
 	goModuleVars := struct {
 		ProjectName string
@@ -221,7 +260,7 @@ func createMainGoFile(cmd *cobra.Command, expectedProjectPath string, projectNam
 	}
 	defer file.Close()
 
-	temp := template.Must(template.New("").Parse(MainTmpl))
+	temp := template.Must(template.New("").Parse(mainTmpl))
 	//temp := template.Must(template.ParseFiles("./templates/main.gotmpl"))
 	goModuleVars := struct {
 		ProjectName     string
@@ -282,7 +321,7 @@ func createRootCommandFile(cmd *cobra.Command, expectedProjectPath string, proje
 	}
 	defer file.Close()
 
-	temp := template.Must(template.New("").Parse(RootCommandTmpl))
+	temp := template.Must(template.New("").Parse(rootCommandTmpl))
 	//temp := template.Must(template.ParseFiles("./templates/root_command.gotmpl"))
 	goModuleVars := struct {
 		ProjectName     string
@@ -372,7 +411,7 @@ func createGitIgnoreFileFile(cmd *cobra.Command, expectedProjectPath string, pro
 	}
 	defer file.Close()
 
-	temp := template.Must(template.New("").Parse(GitIgnoreTmpl))
+	temp := template.Must(template.New("").Parse(gitIgnoreTmpl))
 	//temp := template.Must(template.ParseFiles("./templates/gitignore.gotmpl"))
 	goModuleVars := struct {
 		ProjectName     string
