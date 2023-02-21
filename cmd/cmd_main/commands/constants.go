@@ -20,6 +20,8 @@ const (
 	SubDirectoryIsCreated     = `Zhycan > Sub directory "%s" is created ...`
 	AppControllerIsNotCreated = `Zhycan > App "controller.go" cannot be created ... %v`
 	AppControllerIsCreated    = `Zhycan > App "controller.go" is created ...`
+	AppEngineIsNotCreated     = `Zhycan > App "app.go" cannot be created ... %v`
+	AppEngineIsCreated        = `Zhycan > App "app.go" is created ...`
 
 	RootCommandGoFileIsCreated    = `Zhycan > Root command File "commands/root.go" is created ...`
 	RootCommandGoFileIsNotCreated = `Zhycan > Root command File "commands/root.go" is not created ... %v`
@@ -39,13 +41,13 @@ const (
 )
 
 const (
-	GoModTmpl = `module {{.ProjectName}}
+	goModTmpl = `module {{.ProjectName}}
 
 go {{.Version}}
 
 `
 
-	MainTmpl = `/*
+	mainTmpl = `/*
 Create By Zhycan Framework
 
 Copyright © {{.Year}}
@@ -100,7 +102,7 @@ func main() {
 }
 `
 
-	RootCommandTmpl = `/*
+	rootCommandTmpl = `/*
 Create By Zhycan Framework
 
 Copyright © {{.Year}}
@@ -153,7 +155,7 @@ func init() {
 }
 `
 
-	GitIgnoreTmpl = `# Create By Zhycan Framework
+	gitIgnoreTmpl = `# Create By Zhycan Framework
 #
 # Copyright © {{.Year}}
 # Project: {{.ProjectName}}
@@ -270,7 +272,7 @@ DerivedData/
 /*.gcno
 `
 
-	BaseConfigTmpl = `{
+	baseConfigTmpl = `{
   "name": "{{.ProjectName}}",
   "config_must_watched": true,
   "config_remote_addr": "0.0.0.0:7777",
@@ -281,7 +283,7 @@ DerivedData/
     {"name":"server", "type": "remote"}
   ]
 }`
-	LoggerConfigTmpl = `{
+	loggerConfigTmpl = `{
   "type": "zap",
   "output": ["console", "file"],
   "channel_size": 1000,
@@ -304,8 +306,37 @@ DerivedData/
     "ctype": "tcp"
   }
 }`
+	httpConfigTmpl = `{
+  "default": "s1",
+  "servers": [
+    {
+      "name":                   "s1",
+      "addr":                   ":3000",
+      "conf": {
+        "server_header": "",
+        "strict_routing": false,
+        "case_sensitive": false,
+        "unescape_path": false,
+        "etag": false,
+        "body_limit": 4194304,
+        "concurrency": 262144,
+        "read_timeout": -1,
+        "write_timeout": -1,
+        "idle_timeout": -1,
+        "read_buffer_size": 4096,
+        "write_buffer_size": 4096,
+        "compressed_file_suffix": ".gz",
+        "get_only": false,
+        "disable_keepalive": false,
+        "network": "tcp",
+        "enable_print_routes": true,
+        "attach_error_handler": true
+      }
+    }
+  ]
+}`
 
-	AppControllerTmpl = `/*
+	appControllerTmpl = `/*
 Create By Zhycan Framework
 
 Copyright © {{.Year}}
@@ -327,5 +358,24 @@ func (ctrl *SampleController) GetHello(c *fiber.Ctx) error {
     return c.SendString("Hello World")
 }
 
+`
+
+	appEngineTmpl = `/*
+Create By Zhycan Framework
+
+Copyright © {{.Year}}
+Project: {{.ProjectName}}
+File: "app/app.go" --> {{ .Time.Format .TimeFormat }} by {{.CreatorUserName}}
+------------------------------
+*/
+
+package app
+
+// MARK: App Engine
+
+// App - application engine structure that must satisfy one of the engine interface such as 'engine.RestfulApp', ...
+type App struct {}
+
+// Other parts such as Routes function and ... can be implemented in other files
 `
 )
