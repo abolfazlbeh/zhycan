@@ -312,6 +312,7 @@ DerivedData/
     {
       "name":                   "s1",
       "addr":                   ":3000",
+      "versions":               ["v1", "v2"],
       "conf": {
         "server_header": "",
         "strict_routing": false,

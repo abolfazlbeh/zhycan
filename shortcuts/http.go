@@ -10,6 +10,7 @@ type HttpRoute struct {
 	Method    string
 	Path      string
 	RouteName string
+	Versions  []string
 	F         *func(c *fiber.Ctx) error
 	Servers   []string
 }
@@ -20,15 +21,17 @@ func AddHttpRouteByObj(httpRoute HttpRoute) error {
 		httpRoute.Path,
 		*httpRoute.F,
 		httpRoute.RouteName,
+		httpRoute.Versions,
 		httpRoute.Servers...)
 }
 
 // AddHttpRoute - Add route by parameters
-func AddHttpRoute(method string, path string, f func(c *fiber.Ctx) error, routeName string, serverName ...string) error {
+func AddHttpRoute(method string, path string, f func(c *fiber.Ctx) error, routeName string, versions []string, serverName ...string) error {
 	return http.GetManager().AddRoute(method,
 		path,
 		f,
 		routeName,
+		versions,
 		serverName...)
 }
 
@@ -39,6 +42,7 @@ func AddBulkHttpRoutes(httpRoutes []HttpRoute) error {
 			httpRoute.Path,
 			*httpRoute.F,
 			httpRoute.RouteName,
+			httpRoute.Versions,
 			httpRoute.Servers...)
 		if err != nil {
 			return err

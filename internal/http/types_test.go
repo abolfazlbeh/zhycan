@@ -2,6 +2,7 @@ package http
 
 import (
 	"encoding/json"
+	"reflect"
 	"testing"
 )
 
@@ -10,6 +11,7 @@ func TestServerConfig_UnmarshalJson(t *testing.T) {
 	input := []byte(`{
       "addr":                   ":3000",
       "name":                   "s1",
+	  "versions":               ["v1", "v2"],
       "conf": {
         "server_header": "",
         "strict_routing": false,
@@ -33,9 +35,13 @@ func TestServerConfig_UnmarshalJson(t *testing.T) {
     }`)
 
 	// Test expected result
+	v := make([]string, 0)
+	v = append(v, "v1")
+	v = append(v, "v1")
 	expected := ServerConfig{
 		ListenAddress: ":3000",
 		Name:          "s1",
+		Versions:      v,
 		Config: struct {
 			ServerHeader         string `json:"server_header"`
 			StrictRouting        bool   `json:"strict_routing"`
@@ -85,7 +91,7 @@ func TestServerConfig_UnmarshalJson(t *testing.T) {
 	}
 
 	// Check if the result is what we expected
-	if config != expected {
+	if reflect.DeepEqual(config, expected) {
 		t.Errorf("Expected %+v, got %+v", expected, config)
 	}
 }
