@@ -123,16 +123,16 @@ func (m *manager) StopServers() error {
 }
 
 // AddRoute - add a route to the server with specified name
-func (m *manager) AddRoute(method string, path string, f func(c *fiber.Ctx) error, routeName string, serverName ...string) error {
+func (m *manager) AddRoute(method string, path string, f func(c *fiber.Ctx) error, routeName string, versions []string, serverName ...string) error {
 	if len(serverName) > 0 {
 		for _, sn := range serverName {
 			if s, ok := m.servers[sn]; ok {
-				return s.AddRoute(method, path, f, routeName)
+				return s.AddRoute(method, path, f, routeName, versions)
 			}
 		}
 	} else {
 		if m.defaultServer != "" {
-			return m.servers[m.defaultServer].AddRoute(method, path, f, routeName)
+			return m.servers[m.defaultServer].AddRoute(method, path, f, routeName, versions)
 		}
 	}
 	return NewAddRouteToNilServerErr(path)

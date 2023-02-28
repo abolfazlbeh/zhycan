@@ -2,6 +2,7 @@ package http
 
 import (
 	"github.com/gofiber/fiber/v2"
+	"strings"
 	"zhycan/internal/utils"
 )
 
@@ -9,8 +10,9 @@ import (
 
 // Server struct
 type Server struct {
-	config ServerConfig
-	app    *fiber.App
+	config        ServerConfig
+	app           *fiber.App
+	versionGroups map[string]fiber.Router
 }
 
 // init - Server Constructor - It initializes the server
@@ -22,12 +24,20 @@ func (s *Server) init(config ServerConfig) error {
 	return nil
 }
 
+func (s *Server) createVersionGroups(versions []string) {
+	s.versionGroups = make(map[string]fiber.Router)
+	for _, item := range versions {
+		s.versionGroups[item] = s.app.Group(item)
+	}
+}
+
 // MARK: Public functions
 
 // NewServer - create a new instance of Server and return it
 func NewServer(config ServerConfig) (*Server, error) {
 	server := &Server{}
 	err := server.init(config)
+	server.createVersionGroups(config.Versions)
 	if err != nil {
 		return nil, NewCreateServerErr(err)
 	}
@@ -53,11 +63,38 @@ func (s *Server) Stop() error {
 }
 
 // AddRoute - add a route to the server
-func (s *Server) AddRoute(method string, path string, f func(c *fiber.Ctx) error, routeName string) error {
+func (s *Server) AddRoute(method string, path string, f func(c *fiber.Ctx) error, routeName string, versions []string) error {
 	// check that whether is acceptable to add this route method
 	if utils.ArrayContains(&fiber.DefaultMethods, method) {
-		s.app.Add(method, path, f)
-		s.app.Name(routeName)
+		if len(versions) > 0 {
+			for _, v := range versions {
+				if router, ok := s.versionGroups[v]; ok {
+					router.Add(method, path, f)
+					if strings.TrimSpace(routeName) != "" {
+						router.Name(routeName)
+					}
+				} else {
+					if v == "all" {
+						for _, router1 := range s.versionGroups {
+							router1.Add(method, path, f)
+							if strings.TrimSpace(routeName) != "" {
+								router1.Name(routeName)
+							}
+						}
+					} else if v == "" {
+						s.app.Add(method, path, f)
+						if strings.TrimSpace(routeName) != "" {
+							s.app.Name(routeName)
+						}
+					}
+				}
+			}
+		} else {
+			s.app.Add(method, path, f)
+			if strings.TrimSpace(routeName) != "" {
+				s.app.Name(routeName)
+			}
+		}
 		return nil
 	}
 
