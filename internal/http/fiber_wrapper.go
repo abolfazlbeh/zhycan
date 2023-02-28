@@ -1,6 +1,7 @@
 package http
 
 import (
+	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"strings"
 	"zhycan/internal/utils"
@@ -13,6 +14,7 @@ type Server struct {
 	config        ServerConfig
 	app           *fiber.App
 	versionGroups map[string]fiber.Router
+	groups        map[string]fiber.Router
 }
 
 // init - Server Constructor - It initializes the server
@@ -21,6 +23,7 @@ func (s *Server) init(config ServerConfig) error {
 	s.app = fiber.New(fiber.Config{
 		Prefork: false,
 	})
+	s.groups = make(map[string]fiber.Router)
 	return nil
 }
 
@@ -28,6 +31,14 @@ func (s *Server) createVersionGroups(versions []string) {
 	s.versionGroups = make(map[string]fiber.Router)
 	for _, item := range versions {
 		s.versionGroups[item] = s.app.Group(item)
+	}
+}
+
+func (s *Server) addGroup(groupName string, router fiber.Router, f func(c *fiber.Ctx) error) {
+	if f == nil {
+		s.groups[groupName] = router.Group(groupName)
+	} else {
+		s.groups[groupName] = router.Group(groupName, f)
 	}
 }
 
@@ -99,6 +110,35 @@ func (s *Server) AddRoute(method string, path string, f func(c *fiber.Ctx) error
 	}
 
 	return NewNotSupportedHttpMethodErr(method)
+}
+
+// AddGroup - add a group to the server
+func (s *Server) AddGroup(groupName string, f func(c *fiber.Ctx) error, groups ...string) error {
+	if len(groups) > 0 {
+		for _, g := range groups {
+			for key, _ := range s.versionGroups {
+				gKey := fmt.Sprintf("%s.%s", key, g)
+				if r, ok := s.groups[gKey]; ok {
+					newKey := fmt.Sprintf("%s.%s.%s", key, g, groupName)
+					s.addGroup(newKey, r, f)
+				} else {
+					return NewGroupRouteNotExistErr(gKey)
+				}
+			}
+
+			newKey := fmt.Sprintf("%s.%s", g, groupName)
+			s.addGroup(newKey, s.app, f)
+		}
+	} else {
+		for key, item := range s.versionGroups {
+			newKey := fmt.Sprintf("%s.%s", key, groupName)
+			s.addGroup(newKey, item, f)
+		}
+
+		s.addGroup(groupName, s.app, f)
+	}
+
+	return nil
 }
 
 func (s *Server) GetRouteByName(name string) (*fiber.Route, error) {
