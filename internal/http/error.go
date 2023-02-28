@@ -134,3 +134,33 @@ func (err *FromMultipleServerErr) Error() string {
 func NewFromMultipleServerErr() error {
 	return &FromMultipleServerErr{}
 }
+
+// GroupRouteNotExistErr Error
+type GroupRouteNotExistErr struct {
+	name string
+}
+
+// Error method - satisfying error interface
+func (err *GroupRouteNotExistErr) Error() string {
+	return fmt.Sprintf("There is no group route be the name: %v", err.name)
+}
+
+// NewGroupRouteNotExistErr - return a new instance of GroupRouteNotExistErr
+func NewGroupRouteNotExistErr(name string) error {
+	return &GroupRouteNotExistErr{name: name}
+}
+
+// AddGroupToNilServerErr Error
+type AddGroupToNilServerErr struct {
+	groupName string
+}
+
+// Error method - satisfying error interface
+func (err *AddGroupToNilServerErr) Error() string {
+	return fmt.Sprintf("There is no server to add route: %v", err.groupName)
+}
+
+// NewAddGroupToNilServerErr - return a new instance of AddGroupToNilServerErr
+func NewAddGroupToNilServerErr(name string) error {
+	return &AddGroupToNilServerErr{groupName: name}
+}

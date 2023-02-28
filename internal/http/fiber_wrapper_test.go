@@ -254,3 +254,58 @@ func TestFiberWrapper_AddRouteToNoVersions(t *testing.T) {
 		return
 	}
 }
+
+func TestFiberWrapper_AddGroup(t *testing.T) {
+	serverConfig := ServerConfig{ListenAddress: ":3000", Versions: []string{"v1", "v2"}}
+	server, err := NewServer(serverConfig)
+	if err != nil {
+		t.Errorf("Creating HTTP Server --> Expected: %v, but got %v", nil, err)
+		return
+	}
+
+	groupName := "p"
+	server.AddGroup(groupName, func(c *fiber.Ctx) error {
+		return nil
+	})
+
+	expectedGroups := []string{"v1.p", "v2.p", "p"}
+	var actualGroups []string
+	for key, _ := range server.groups {
+		actualGroups = append(actualGroups, key)
+	}
+
+	if !reflect.DeepEqual(expectedGroups, actualGroups) {
+		t.Errorf("Expected that get group list '%v', but got %v", expectedGroups, actualGroups)
+		return
+	}
+}
+
+func TestFiberWrapper_AddGroupToGroup(t *testing.T) {
+	serverConfig := ServerConfig{ListenAddress: ":3000", Versions: []string{"v1", "v2"}}
+	server, err := NewServer(serverConfig)
+	if err != nil {
+		t.Errorf("Creating HTTP Server --> Expected: %v, but got %v", nil, err)
+		return
+	}
+
+	groupName := "p2"
+	server.AddGroup(groupName, func(c *fiber.Ctx) error {
+		return nil
+	})
+
+	groupName = "p"
+	server.AddGroup(groupName, func(c *fiber.Ctx) error {
+		return nil
+	}, "p2")
+
+	expectedGroups := []string{"p2.p", "v1.p2", "v2.p2", "p2", "v1.p2.p", "v2.p2.p"}
+	var actualGroups []string
+	for key, _ := range server.groups {
+		actualGroups = append(actualGroups, key)
+	}
+
+	if !reflect.DeepEqual(expectedGroups, actualGroups) {
+		t.Errorf("Expected that get group list '%v', but got %v", expectedGroups, actualGroups)
+		return
+	}
+}

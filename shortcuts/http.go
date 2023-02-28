@@ -15,6 +15,14 @@ type HttpRoute struct {
 	Servers   []string
 }
 
+// HttpGroup - Structure of the group
+type HttpGroup struct {
+	GroupName string
+	F         *func(c *fiber.Ctx) error
+	Groups    []string
+	Servers   []string
+}
+
 // AddHttpRouteByObj - add route by HttpRoute obj
 func AddHttpRouteByObj(httpRoute HttpRoute) error {
 	return http.GetManager().AddRoute(httpRoute.Method,
@@ -51,6 +59,39 @@ func AddBulkHttpRoutes(httpRoutes []HttpRoute) error {
 	return nil
 }
 
+// GetRouteByName - Get route by providing the route name from specific server
 func GetRouteByName(routeName string, serverName ...string) (*fiber.Route, error) {
 	return http.GetManager().GetRouteByName(routeName, serverName...)
+}
+
+// AddHttpGroupByObj - add group by HttpGroup obj
+func AddHttpGroupByObj(group HttpGroup) error {
+	return http.GetManager().AddGroup(
+		group.GroupName,
+		*group.F,
+		group.Groups,
+		group.Servers...,
+	)
+}
+
+// AddHttpGroup - Add group by parameters
+func AddHttpGroup(groupName string, f func(c *fiber.Ctx) error, groups []string, serverName ...string) error {
+	return http.GetManager().AddGroup(groupName,
+		f, groups, serverName...)
+}
+
+// AddBulkHttpGroups - add bulk http groups to the server
+func AddBulkHttpGroups(httpGroups []HttpGroup) error {
+	for _, group := range httpGroups {
+		err := http.GetManager().AddGroup(
+			group.GroupName,
+			*group.F,
+			group.Groups,
+			group.Servers...,
+		)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
