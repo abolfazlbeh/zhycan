@@ -34,7 +34,7 @@ func TestFiberWrapper_AddRoute(t *testing.T) {
 
 	server.AddRoute(fiber.MethodGet, "/", func(c *fiber.Ctx) error {
 		return nil
-	}, "TestGet", []string{})
+	}, "TestGet", []string{}, []string{})
 
 	routes := server.app.GetRoutes()
 	if len(routes) == 0 {
@@ -65,7 +65,7 @@ func TestFiberWrapper_AddMultipleRoute(t *testing.T) {
 	for i := range []int{1, 2, 3} {
 		server.AddRoute(fiber.MethodGet, fmt.Sprintf("/%v", i), func(c *fiber.Ctx) error {
 			return nil
-		}, fmt.Sprintf("Test%v", i), []string{})
+		}, fmt.Sprintf("Test%v", i), []string{}, []string{})
 	}
 
 	routes := server.app.GetRoutes()
@@ -99,7 +99,7 @@ func TestFiberWrapper_AddBlockRouteMethod(t *testing.T) {
 
 	server.AddRoute("TTT", "/", func(c *fiber.Ctx) error {
 		return nil
-	}, "TestGet", []string{})
+	}, "TestGet", []string{}, []string{})
 
 	routes := server.app.GetRoutes()
 	if len(routes) > 0 {
@@ -119,7 +119,7 @@ func TestFiberWrapper_GetRouteByName(t *testing.T) {
 	routeName := "TestGet"
 	server.AddRoute(fiber.MethodGet, "/", func(c *fiber.Ctx) error {
 		return nil
-	}, routeName, []string{})
+	}, routeName, []string{}, []string{})
 
 	routes := server.app.GetRoutes()
 	if len(routes) == 0 {
@@ -150,7 +150,7 @@ func TestFiberWrapper_AddRouteToOneSupportedVersion(t *testing.T) {
 	routeName := "TestGet"
 	server.AddRoute(fiber.MethodGet, "/", func(c *fiber.Ctx) error {
 		return nil
-	}, routeName, []string{"v1"})
+	}, routeName, []string{"v1"}, []string{})
 
 	routes := server.app.GetRoutes()
 	if len(routes) == 0 {
@@ -176,7 +176,7 @@ func TestFiberWrapper_AddRouteToTwoSupportedVersions(t *testing.T) {
 	routeName := "TestGet"
 	server.AddRoute(fiber.MethodGet, "/", func(c *fiber.Ctx) error {
 		return nil
-	}, routeName, []string{"v1", "v2"})
+	}, routeName, []string{"v1", "v2"}, []string{})
 
 	routes := server.app.GetRoutes()
 	if len(routes) != 2 {
@@ -206,7 +206,7 @@ func TestFiberWrapper_AddRouteToAllVersions(t *testing.T) {
 	routeName := "TestGet"
 	server.AddRoute(fiber.MethodGet, "/", func(c *fiber.Ctx) error {
 		return nil
-	}, routeName, []string{"all"})
+	}, routeName, []string{"all"}, []string{})
 
 	routes := server.app.GetRoutes()
 	if len(routes) != 2 {
@@ -236,11 +236,11 @@ func TestFiberWrapper_AddRouteToNoVersions(t *testing.T) {
 	routeName := "TestGet"
 	server.AddRoute(fiber.MethodGet, "/", func(c *fiber.Ctx) error {
 		return nil
-	}, routeName, []string{""})
+	}, routeName, []string{""}, []string{})
 
 	routes := server.app.GetRoutes()
 	if len(routes) != 1 {
-		t.Errorf("Expected that %v route(s) exist, but got %v", 2, len(routes))
+		t.Errorf("Expected that %v route(s) exist, but got %v", 1, len(routes))
 		return
 	}
 
@@ -306,6 +306,35 @@ func TestFiberWrapper_AddGroupToGroup(t *testing.T) {
 
 	if !reflect.DeepEqual(expectedGroups, actualGroups) {
 		t.Errorf("Expected that get group list '%v', but got %v", expectedGroups, actualGroups)
+		return
+	}
+}
+
+func TestFiberWrapper_AddRouteToSpecificGroup(t *testing.T) {
+	serverConfig := ServerConfig{ListenAddress: ":3000", Versions: []string{"v1", "v2"}}
+	server, err := NewServer(serverConfig)
+	if err != nil {
+		t.Errorf("Creating HTTP Server --> Expected: %v, but got %v", nil, err)
+		return
+	}
+
+	groupName := "p2"
+	server.AddGroup(groupName, nil)
+
+	routeName := "TestGet"
+	server.AddRoute(fiber.MethodGet, "/ttt", func(c *fiber.Ctx) error {
+		return nil
+	}, routeName, []string{"v1"}, []string{groupName})
+
+	routes := server.app.GetRoutes()
+	if len(routes) != 1 {
+		t.Errorf("Expected that %v route(s) exist, but got %v", 1, len(routes))
+		return
+	}
+	expectedRoute := "/v1/p2/ttt"
+	actualRoute := routes[0].Path
+	if !reflect.DeepEqual(actualRoute, expectedRoute) {
+		t.Errorf("Expected that the first route be %v, but got %v", expectedRoute, actualRoute)
 		return
 	}
 }

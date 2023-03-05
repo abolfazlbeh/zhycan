@@ -81,7 +81,7 @@ func TestManager_AddRoute(t *testing.T) {
 
 	err := m.AddRoute(fiber.MethodGet, "/", func(c *fiber.Ctx) error {
 		return nil
-	}, "TestGet", []string{})
+	}, "TestGet", []string{}, []string{})
 	if err != nil {
 		t.Errorf("Adding route to server expected to return %v, but got %v", nil, err)
 	}
@@ -103,7 +103,7 @@ func TestManager_AddRouteToSpecificServer(t *testing.T) {
 
 	err := m.AddRoute(fiber.MethodGet, "/", func(c *fiber.Ctx) error {
 		return nil
-	}, "TestGet", []string{})
+	}, "TestGet", []string{}, []string{})
 	if err != nil {
 		t.Errorf("Adding route to server expected to return %v, but got %v", nil, err)
 	}
@@ -128,7 +128,7 @@ func TestManager_GetRouteByName(t *testing.T) {
 	routeName := "TestGet"
 	err := m.AddRoute(fiber.MethodGet, "/", func(c *fiber.Ctx) error {
 		return nil
-	}, routeName, []string{}, serverName)
+	}, routeName, []string{}, []string{}, serverName)
 	if err != nil {
 		t.Errorf("Adding route to server expected to return %v, but got %v", nil, err)
 		return

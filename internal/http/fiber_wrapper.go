@@ -34,11 +34,11 @@ func (s *Server) createVersionGroups(versions []string) {
 	}
 }
 
-func (s *Server) addGroup(groupName string, router fiber.Router, f func(c *fiber.Ctx) error) {
+func (s *Server) addGroup(keyName string, groupName string, router fiber.Router, f func(c *fiber.Ctx) error) {
 	if f == nil {
-		s.groups[groupName] = router.Group(groupName)
+		s.groups[keyName] = router.Group(groupName)
 	} else {
-		s.groups[groupName] = router.Group(groupName, f)
+		s.groups[keyName] = router.Group(groupName, f)
 	}
 }
 
@@ -74,36 +74,89 @@ func (s *Server) Stop() error {
 }
 
 // AddRoute - add a route to the server
-func (s *Server) AddRoute(method string, path string, f func(c *fiber.Ctx) error, routeName string, versions []string) error {
+func (s *Server) AddRoute(method string, path string, f func(c *fiber.Ctx) error, routeName string, versions []string, groups []string) error {
 	// check that whether is acceptable to add this route method
 	if utils.ArrayContains(&fiber.DefaultMethods, method) {
-		if len(versions) > 0 {
-			for _, v := range versions {
-				if router, ok := s.versionGroups[v]; ok {
-					router.Add(method, path, f)
-					if strings.TrimSpace(routeName) != "" {
-						router.Name(routeName)
-					}
-				} else {
-					if v == "all" {
-						for _, router1 := range s.versionGroups {
-							router1.Add(method, path, f)
-							if strings.TrimSpace(routeName) != "" {
-								router1.Name(routeName)
+		if len(groups) > 0 {
+			for _, g := range groups {
+				if len(versions) > 0 {
+					for _, v := range versions {
+						if v == "all" {
+							for k, _ := range s.versionGroups {
+								newKey := fmt.Sprintf("%s.%s", k, g)
+								if router, ok := s.groups[newKey]; ok {
+									router.Add(method, path, f)
+									if strings.TrimSpace(routeName) != "" {
+										//router.Name(routeName)
+										s.app.Name(routeName)
+									}
+								}
+							}
+							break
+						} else if v == "" {
+							if router, ok := s.groups[g]; ok {
+								router.Add(method, path, f)
+								if strings.TrimSpace(routeName) != "" {
+									//router.Name(routeName)
+									s.app.Name(routeName)
+								}
+							}
+							break
+						} else {
+							newKey := fmt.Sprintf("%s.%s", v, g)
+							if router, ok := s.groups[newKey]; ok {
+								router.Add(method, path, f)
+								if strings.TrimSpace(routeName) != "" {
+									s.app.Name(routeName)
+									//router.Name(routeName)
+								}
 							}
 						}
-					} else if v == "" {
-						s.app.Add(method, path, f)
+					}
+				} else {
+					if savedGroup, ok := s.groups[g]; ok {
+						savedGroup.Add(method, path, f)
 						if strings.TrimSpace(routeName) != "" {
+							//savedGroup.Name(routeName)
 							s.app.Name(routeName)
+
 						}
 					}
 				}
 			}
 		} else {
-			s.app.Add(method, path, f)
-			if strings.TrimSpace(routeName) != "" {
-				s.app.Name(routeName)
+			if len(versions) > 0 {
+				for _, v := range versions {
+					if router, ok := s.versionGroups[v]; ok {
+						router.Add(method, path, f)
+						if strings.TrimSpace(routeName) != "" {
+							//router.Name(routeName)
+							s.app.Name(routeName)
+						}
+					} else {
+						if v == "all" {
+							for _, router1 := range s.versionGroups {
+								router1.Add(method, path, f)
+								if strings.TrimSpace(routeName) != "" {
+									//router1.Name(routeName)
+									s.app.Name(routeName)
+								}
+							}
+							break
+						} else if v == "" {
+							s.app.Add(method, path, f)
+							if strings.TrimSpace(routeName) != "" {
+								s.app.Name(routeName)
+							}
+							break
+						}
+					}
+				}
+			} else {
+				s.app.Add(method, path, f)
+				if strings.TrimSpace(routeName) != "" {
+					s.app.Name(routeName)
+				}
 			}
 		}
 		return nil
@@ -120,22 +173,22 @@ func (s *Server) AddGroup(groupName string, f func(c *fiber.Ctx) error, groups .
 				gKey := fmt.Sprintf("%s.%s", key, g)
 				if r, ok := s.groups[gKey]; ok {
 					newKey := fmt.Sprintf("%s.%s.%s", key, g, groupName)
-					s.addGroup(newKey, r, f)
+					s.addGroup(newKey, groupName, r, f)
 				} else {
 					return NewGroupRouteNotExistErr(gKey)
 				}
 			}
 
 			newKey := fmt.Sprintf("%s.%s", g, groupName)
-			s.addGroup(newKey, s.app, f)
+			s.addGroup(newKey, groupName, s.app, f)
 		}
 	} else {
 		for key, item := range s.versionGroups {
 			newKey := fmt.Sprintf("%s.%s", key, groupName)
-			s.addGroup(newKey, item, f)
+			s.addGroup(newKey, groupName, item, f)
 		}
 
-		s.addGroup(groupName, s.app, f)
+		s.addGroup(groupName, groupName, s.app, f)
 	}
 
 	return nil
