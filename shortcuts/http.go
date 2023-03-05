@@ -7,12 +7,13 @@ import (
 
 // HttpRoute - Structure of the route
 type HttpRoute struct {
-	Method    string
-	Path      string
-	RouteName string
-	Versions  []string
-	F         *func(c *fiber.Ctx) error
-	Servers   []string
+	Method     string
+	Path       string
+	RouteName  string
+	Versions   []string
+	GroupNames []string
+	F          *func(c *fiber.Ctx) error
+	Servers    []string
 }
 
 // HttpGroup - Structure of the group
@@ -30,16 +31,18 @@ func AddHttpRouteByObj(httpRoute HttpRoute) error {
 		*httpRoute.F,
 		httpRoute.RouteName,
 		httpRoute.Versions,
+		httpRoute.GroupNames,
 		httpRoute.Servers...)
 }
 
 // AddHttpRoute - Add route by parameters
-func AddHttpRoute(method string, path string, f func(c *fiber.Ctx) error, routeName string, versions []string, serverName ...string) error {
+func AddHttpRoute(method string, path string, f func(c *fiber.Ctx) error, routeName string, versions []string, groupNames []string, serverName ...string) error {
 	return http.GetManager().AddRoute(method,
 		path,
 		f,
 		routeName,
 		versions,
+		groupNames,
 		serverName...)
 }
 
@@ -51,6 +54,7 @@ func AddBulkHttpRoutes(httpRoutes []HttpRoute) error {
 			*httpRoute.F,
 			httpRoute.RouteName,
 			httpRoute.Versions,
+			httpRoute.GroupNames,
 			httpRoute.Servers...)
 		if err != nil {
 			return err
