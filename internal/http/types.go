@@ -24,4 +24,7 @@ type ServerConfig struct {
 		EnablePrintRoutes    bool   `json:"enable_print_routes"`
 		AttachErrorHandler   bool   `json:"attach_error_handler"`
 	} `json:"conf"`
+	Middlewares struct {
+		Order []string `json:"order"`
+	} `json:"middlewares"`
 }
