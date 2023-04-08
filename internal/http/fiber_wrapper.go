@@ -3,6 +3,7 @@ package http
 import (
 	"fmt"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/logger"
 	"strings"
 	"zhycan/internal/utils"
 )
@@ -11,10 +12,11 @@ import (
 
 // Server struct
 type Server struct {
-	config        ServerConfig
-	app           *fiber.App
-	versionGroups map[string]fiber.Router
-	groups        map[string]fiber.Router
+	config               ServerConfig
+	app                  *fiber.App
+	versionGroups        map[string]fiber.Router
+	groups               map[string]fiber.Router
+	supportedMiddlewares []string
 }
 
 // init - Server Constructor - It initializes the server
@@ -24,6 +26,9 @@ func (s *Server) init(config ServerConfig) error {
 		Prefork: false,
 	})
 	s.groups = make(map[string]fiber.Router)
+	s.supportedMiddlewares = []string{
+		"logger",
+	}
 	return nil
 }
 
@@ -31,6 +36,17 @@ func (s *Server) createVersionGroups(versions []string) {
 	s.versionGroups = make(map[string]fiber.Router)
 	for _, item := range versions {
 		s.versionGroups[item] = s.app.Group(item)
+	}
+}
+
+func (s *Server) attachMiddlewares(orders []string) {
+	for _, item := range orders {
+		if utils.ArrayContains(&s.supportedMiddlewares, item) {
+			switch item {
+			case "logger":
+				s.app.Use(logger.New())
+			}
+		}
 	}
 }
 
@@ -48,10 +64,12 @@ func (s *Server) addGroup(keyName string, groupName string, router fiber.Router,
 func NewServer(config ServerConfig) (*Server, error) {
 	server := &Server{}
 	err := server.init(config)
-	server.createVersionGroups(config.Versions)
 	if err != nil {
 		return nil, NewCreateServerErr(err)
 	}
+
+	server.attachMiddlewares(config.Middlewares.Order)
+	server.createVersionGroups(config.Versions)
 	return server, nil
 }
 
@@ -82,7 +100,7 @@ func (s *Server) AddRoute(method string, path string, f func(c *fiber.Ctx) error
 				if len(versions) > 0 {
 					for _, v := range versions {
 						if v == "all" {
-							for k, _ := range s.versionGroups {
+							for k := range s.versionGroups {
 								newKey := fmt.Sprintf("%s.%s", k, g)
 								if router, ok := s.groups[newKey]; ok {
 									router.Add(method, path, f)
@@ -169,7 +187,7 @@ func (s *Server) AddRoute(method string, path string, f func(c *fiber.Ctx) error
 func (s *Server) AddGroup(groupName string, f func(c *fiber.Ctx) error, groups ...string) error {
 	if len(groups) > 0 {
 		for _, g := range groups {
-			for key, _ := range s.versionGroups {
+			for key := range s.versionGroups {
 				gKey := fmt.Sprintf("%s.%s", key, g)
 				if r, ok := s.groups[gKey]; ok {
 					newKey := fmt.Sprintf("%s.%s.%s", key, g, groupName)

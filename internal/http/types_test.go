@@ -31,7 +31,10 @@ func TestServerConfig_UnmarshalJson(t *testing.T) {
         "network": "tcp",
         "enable_print_routes": true,
         "attach_error_handler": true
-      }
+      },
+      "middlewares": {
+		"order": ["logger"]
+	  }
     }`)
 
 	// Test expected result
@@ -81,6 +84,9 @@ func TestServerConfig_UnmarshalJson(t *testing.T) {
 			EnablePrintRoutes:    true,
 			AttachErrorHandler:   true,
 		},
+		Middlewares: struct {
+			Order []string `json:"order"`
+		}{Order: []string{"logger"}},
 	}
 
 	// Unmarshal the input data into a ServerConfig instance

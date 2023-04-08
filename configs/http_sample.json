@@ -24,6 +24,9 @@
         "network": "tcp",
         "enable_print_routes": true,
         "attach_error_handler": true
+      },
+      "middlewares": {
+        "order": ["logger"]
       }
     }
   ]
