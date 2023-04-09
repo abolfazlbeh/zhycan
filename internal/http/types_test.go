@@ -33,7 +33,12 @@ func TestServerConfig_UnmarshalJson(t *testing.T) {
         "attach_error_handler": true
       },
       "middlewares": {
-		"order": ["logger"]
+		"order": ["logger", "favicon"],
+		"favicon": {
+            "file": "./favicon.ico",
+            "url": "/favicon.ico",
+            "cache_control": "public, max-age=31536000"
+        }
 	  }
     }`)
 
@@ -86,7 +91,7 @@ func TestServerConfig_UnmarshalJson(t *testing.T) {
 		},
 		Middlewares: struct {
 			Order []string `json:"order"`
-		}{Order: []string{"logger"}},
+		}{Order: []string{"logger", "favicon"}},
 	}
 
 	// Unmarshal the input data into a ServerConfig instance

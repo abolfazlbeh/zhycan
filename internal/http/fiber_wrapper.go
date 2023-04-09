@@ -1,10 +1,15 @@
 package http
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/favicon"
 	"github.com/gofiber/fiber/v2/middleware/logger"
+	"os"
 	"strings"
+	"time"
+	"zhycan/internal/config"
 	"zhycan/internal/utils"
 )
 
@@ -12,6 +17,7 @@ import (
 
 // Server struct
 type Server struct {
+	name                 string
 	config               ServerConfig
 	app                  *fiber.App
 	versionGroups        map[string]fiber.Router
@@ -20,7 +26,8 @@ type Server struct {
 }
 
 // init - Server Constructor - It initializes the server
-func (s *Server) init(config ServerConfig) error {
+func (s *Server) init(name string, config ServerConfig) error {
+	s.name = name
 	s.config = config
 	s.app = fiber.New(fiber.Config{
 		Prefork: false,
@@ -28,6 +35,7 @@ func (s *Server) init(config ServerConfig) error {
 	s.groups = make(map[string]fiber.Router)
 	s.supportedMiddlewares = []string{
 		"logger",
+		"favicon",
 	}
 	return nil
 }
@@ -44,7 +52,55 @@ func (s *Server) attachMiddlewares(orders []string) {
 		if utils.ArrayContains(&s.supportedMiddlewares, item) {
 			switch item {
 			case "logger":
+				key := fmt.Sprintf("middlewares.%s", item)
+				// read config
+				loggerCfg, err := config.GetManager().Get(s.name, key)
+				if err == nil {
+					jsonBody, err2 := json.Marshal(loggerCfg.(interface{}))
+					if err2 == nil {
+						var obj LoggerMiddlewareConfig
+						err := json.Unmarshal(jsonBody, &obj)
+						if err == nil {
+							// Everything is ok and let's go define logger config
+							loggerMiddlewareCfg := logger.Config{
+								Next:         nil,
+								Done:         nil,
+								Format:       obj.Format,
+								TimeFormat:   obj.TimeFormat,
+								TimeZone:     obj.TimeZone,
+								TimeInterval: time.Duration(obj.TimeInterval) * time.Millisecond,
+							}
+							if obj.Output == "stdout" {
+								loggerMiddlewareCfg.Output = os.Stdout
+							}
+							s.app.Use(logger.New(loggerMiddlewareCfg))
+							break
+						}
+					}
+				}
 				s.app.Use(logger.New())
+
+			case "favicon":
+				key := fmt.Sprintf("middlewares.%s", item)
+				// read config
+				loggerCfg, err := config.GetManager().Get(s.name, key)
+				if err == nil {
+					jsonBody, err2 := json.Marshal(loggerCfg.(interface{}))
+					if err2 == nil {
+						var obj FaviconMiddlewareConfig
+						err := json.Unmarshal(jsonBody, &obj)
+						if err != nil {
+							faviconMiddlewareCfg := favicon.Config{
+								File:         obj.File,
+								URL:          obj.URL,
+								CacheControl: obj.CacheControl,
+							}
+							s.app.Use(favicon.New(faviconMiddlewareCfg))
+							break
+						}
+					}
+				}
+				s.app.Use(favicon.New())
 			}
 		}
 	}
@@ -61,9 +117,9 @@ func (s *Server) addGroup(keyName string, groupName string, router fiber.Router,
 // MARK: Public functions
 
 // NewServer - create a new instance of Server and return it
-func NewServer(config ServerConfig) (*Server, error) {
+func NewServer(name string, config ServerConfig) (*Server, error) {
 	server := &Server{}
-	err := server.init(config)
+	err := server.init(name, config)
 	if err != nil {
 		return nil, NewCreateServerErr(err)
 	}

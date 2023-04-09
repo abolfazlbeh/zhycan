@@ -53,7 +53,7 @@ func (m *manager) init() {
 		var obj ServerConfig
 		err := json.Unmarshal(jsonBody, &obj)
 		if err == nil {
-			server, err1 := NewServer(obj)
+			server, err1 := NewServer(m.name, obj)
 			if err1 == nil {
 				m.servers[obj.Name] = server
 
