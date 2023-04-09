@@ -11,7 +11,7 @@ func TestFiberWrapper_startServer(t *testing.T) {
 	// create a new fiber wrapper and start it
 
 	serverConfig := ServerConfig{ListenAddress: ":3000"}
-	server, err := NewServer(serverConfig)
+	server, err := NewServer("http", serverConfig)
 	if err != nil {
 		t.Errorf("Creating HTTP Server --> Expected: %v, but got %v", nil, err)
 		return
@@ -26,7 +26,7 @@ func TestFiberWrapper_startServer(t *testing.T) {
 
 func TestFiberWrapper_AddRoute(t *testing.T) {
 	serverConfig := ServerConfig{ListenAddress: ":3000"}
-	server, err := NewServer(serverConfig)
+	server, err := NewServer("http", serverConfig)
 	if err != nil {
 		t.Errorf("Creating HTTP Server --> Expected: %v, but got %v", nil, err)
 		return
@@ -56,7 +56,7 @@ func TestFiberWrapper_AddRoute(t *testing.T) {
 
 func TestFiberWrapper_AddMultipleRoute(t *testing.T) {
 	serverConfig := ServerConfig{ListenAddress: ":3000"}
-	server, err := NewServer(serverConfig)
+	server, err := NewServer("http", serverConfig)
 	if err != nil {
 		t.Errorf("Creating HTTP Server --> Expected: %v, but got %v", nil, err)
 		return
@@ -91,7 +91,7 @@ func TestFiberWrapper_AddMultipleRoute(t *testing.T) {
 
 func TestFiberWrapper_AddBlockRouteMethod(t *testing.T) {
 	serverConfig := ServerConfig{ListenAddress: ":3000"}
-	server, err := NewServer(serverConfig)
+	server, err := NewServer("http", serverConfig)
 	if err != nil {
 		t.Errorf("Creating HTTP Server --> Expected: %v, but got %v", nil, err)
 		return
@@ -110,7 +110,7 @@ func TestFiberWrapper_AddBlockRouteMethod(t *testing.T) {
 
 func TestFiberWrapper_GetRouteByName(t *testing.T) {
 	serverConfig := ServerConfig{ListenAddress: ":3000"}
-	server, err := NewServer(serverConfig)
+	server, err := NewServer("http", serverConfig)
 	if err != nil {
 		t.Errorf("Creating HTTP Server --> Expected: %v, but got %v", nil, err)
 		return
@@ -141,7 +141,7 @@ func TestFiberWrapper_GetRouteByName(t *testing.T) {
 
 func TestFiberWrapper_AddRouteToOneSupportedVersion(t *testing.T) {
 	serverConfig := ServerConfig{ListenAddress: ":3000", Versions: []string{"v1"}}
-	server, err := NewServer(serverConfig)
+	server, err := NewServer("http", serverConfig)
 	if err != nil {
 		t.Errorf("Creating HTTP Server --> Expected: %v, but got %v", nil, err)
 		return
@@ -167,7 +167,7 @@ func TestFiberWrapper_AddRouteToOneSupportedVersion(t *testing.T) {
 
 func TestFiberWrapper_AddRouteToTwoSupportedVersions(t *testing.T) {
 	serverConfig := ServerConfig{ListenAddress: ":3000", Versions: []string{"v1", "v2"}}
-	server, err := NewServer(serverConfig)
+	server, err := NewServer("http", serverConfig)
 	if err != nil {
 		t.Errorf("Creating HTTP Server --> Expected: %v, but got %v", nil, err)
 		return
@@ -197,7 +197,7 @@ func TestFiberWrapper_AddRouteToTwoSupportedVersions(t *testing.T) {
 
 func TestFiberWrapper_AddRouteToAllVersions(t *testing.T) {
 	serverConfig := ServerConfig{ListenAddress: ":3000", Versions: []string{"v1", "v2"}}
-	server, err := NewServer(serverConfig)
+	server, err := NewServer("http", serverConfig)
 	if err != nil {
 		t.Errorf("Creating HTTP Server --> Expected: %v, but got %v", nil, err)
 		return
@@ -227,7 +227,7 @@ func TestFiberWrapper_AddRouteToAllVersions(t *testing.T) {
 
 func TestFiberWrapper_AddRouteToNoVersions(t *testing.T) {
 	serverConfig := ServerConfig{ListenAddress: ":3000", Versions: []string{"v1", "v2"}}
-	server, err := NewServer(serverConfig)
+	server, err := NewServer("http", serverConfig)
 	if err != nil {
 		t.Errorf("Creating HTTP Server --> Expected: %v, but got %v", nil, err)
 		return
@@ -257,7 +257,7 @@ func TestFiberWrapper_AddRouteToNoVersions(t *testing.T) {
 
 func TestFiberWrapper_AddGroup(t *testing.T) {
 	serverConfig := ServerConfig{ListenAddress: ":3000", Versions: []string{"v1", "v2"}}
-	server, err := NewServer(serverConfig)
+	server, err := NewServer("http", serverConfig)
 	if err != nil {
 		t.Errorf("Creating HTTP Server --> Expected: %v, but got %v", nil, err)
 		return
@@ -282,7 +282,7 @@ func TestFiberWrapper_AddGroup(t *testing.T) {
 
 func TestFiberWrapper_AddGroupToGroup(t *testing.T) {
 	serverConfig := ServerConfig{ListenAddress: ":3000", Versions: []string{"v1", "v2"}}
-	server, err := NewServer(serverConfig)
+	server, err := NewServer("http", serverConfig)
 	if err != nil {
 		t.Errorf("Creating HTTP Server --> Expected: %v, but got %v", nil, err)
 		return
@@ -312,7 +312,7 @@ func TestFiberWrapper_AddGroupToGroup(t *testing.T) {
 
 func TestFiberWrapper_AddRouteToSpecificGroup(t *testing.T) {
 	serverConfig := ServerConfig{ListenAddress: ":3000", Versions: []string{"v1", "v2"}}
-	server, err := NewServer(serverConfig)
+	server, err := NewServer("http", serverConfig)
 	if err != nil {
 		t.Errorf("Creating HTTP Server --> Expected: %v, but got %v", nil, err)
 		return
