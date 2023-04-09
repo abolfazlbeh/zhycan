@@ -17,20 +17,32 @@ import (
 
 // Server struct
 type Server struct {
-	name                 string
-	config               ServerConfig
-	app                  *fiber.App
-	versionGroups        map[string]fiber.Router
-	groups               map[string]fiber.Router
-	supportedMiddlewares []string
+	name                  string
+	config                ServerConfig
+	app                   *fiber.App
+	versionGroups         map[string]fiber.Router
+	groups                map[string]fiber.Router
+	supportedMiddlewares  []string
+	defaultRequestMethods []string
 }
 
 // init - Server Constructor - It initializes the server
-func (s *Server) init(name string, config ServerConfig) error {
+func (s *Server) init(name string, serverConfig ServerConfig) error {
 	s.name = name
-	s.config = config
+	s.config = serverConfig
+
+	// Get application name from the config manager
+	appName := config.GetManager().GetName()
+	requestMethods := fiber.DefaultMethods
+	if s.config.Config.RequestMethods[0] != "ALL" {
+		requestMethods = s.config.Config.RequestMethods
+	}
+	s.defaultRequestMethods = requestMethods
+
 	s.app = fiber.New(fiber.Config{
-		Prefork: false,
+		Prefork:        false,
+		AppName:        appName,
+		RequestMethods: requestMethods,
 	})
 	s.groups = make(map[string]fiber.Router)
 	s.supportedMiddlewares = []string{
@@ -150,7 +162,7 @@ func (s *Server) Stop() error {
 // AddRoute - add a route to the server
 func (s *Server) AddRoute(method string, path string, f func(c *fiber.Ctx) error, routeName string, versions []string, groups []string) error {
 	// check that whether is acceptable to add this route method
-	if utils.ArrayContains(&fiber.DefaultMethods, method) {
+	if utils.ArrayContains(&s.defaultRequestMethods, method) {
 		if len(groups) > 0 {
 			for _, g := range groups {
 				if len(versions) > 0 {

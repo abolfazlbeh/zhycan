@@ -338,3 +338,135 @@ func TestFiberWrapper_AddRouteToSpecificGroup(t *testing.T) {
 		return
 	}
 }
+
+func TestFiberWrapper_RequestMethodsNotAllowed(t *testing.T) {
+	serverConfig := ServerConfig{
+		ListenAddress: ":3000",
+		Config: struct {
+			ServerHeader         string   `json:"server_header"`
+			StrictRouting        bool     `json:"strict_routing"`
+			CaseSensitive        bool     `json:"case_sensitive"`
+			UnescapePath         bool     `json:"unescape_path"`
+			Etag                 bool     `json:"etag"`
+			BodyLimit            int      `json:"body_limit"`
+			Concurrency          int      `json:"concurrency"`
+			ReadTimeout          int      `json:"read_timeout"`
+			WriteTimeout         int      `json:"write_timeout"`
+			IdleTimeout          int      `json:"idle_timeout"`
+			ReadBufferSize       int      `json:"read_buffer_size"`
+			WriteBufferSize      int      `json:"write_buffer_size"`
+			CompressedFileSuffix string   `json:"compressed_file_suffix"`
+			GetOnly              bool     `json:"get_only"`
+			DisableKeepalive     bool     `json:"disable_keepalive"`
+			Network              string   `json:"network"`
+			EnablePrintRoutes    bool     `json:"enable_print_routes"`
+			AttachErrorHandler   bool     `json:"attach_error_handler"`
+			RequestMethods       []string `json:"request_methods"`
+		}{
+			ServerHeader:         "",
+			StrictRouting:        false,
+			CaseSensitive:        false,
+			UnescapePath:         false,
+			Etag:                 false,
+			BodyLimit:            4194304,
+			Concurrency:          262144,
+			ReadTimeout:          -1,
+			WriteTimeout:         -1,
+			IdleTimeout:          -1,
+			ReadBufferSize:       4096,
+			WriteBufferSize:      4096,
+			CompressedFileSuffix: ".gz",
+			GetOnly:              false,
+			DisableKeepalive:     false,
+			Network:              "tcp",
+			EnablePrintRoutes:    true,
+			AttachErrorHandler:   true,
+			RequestMethods:       []string{"GET"},
+		},
+	}
+	server, err := NewServer("http", serverConfig)
+	if err != nil {
+		t.Errorf("Creating HTTP Server --> Expected: %v, but got %v", nil, err)
+		return
+	}
+
+	err = server.AddRoute(fiber.MethodPost, "/p", func(c *fiber.Ctx) error {
+		return nil
+	}, "TestPOST", []string{}, []string{})
+	if err == nil {
+		t.Errorf("Expected to not add POST method, but it's added")
+	}
+}
+
+func TestFiberWrapper_RequestMethodsFilter(t *testing.T) {
+	serverConfig := ServerConfig{
+		ListenAddress: ":3000",
+		Config: struct {
+			ServerHeader         string   `json:"server_header"`
+			StrictRouting        bool     `json:"strict_routing"`
+			CaseSensitive        bool     `json:"case_sensitive"`
+			UnescapePath         bool     `json:"unescape_path"`
+			Etag                 bool     `json:"etag"`
+			BodyLimit            int      `json:"body_limit"`
+			Concurrency          int      `json:"concurrency"`
+			ReadTimeout          int      `json:"read_timeout"`
+			WriteTimeout         int      `json:"write_timeout"`
+			IdleTimeout          int      `json:"idle_timeout"`
+			ReadBufferSize       int      `json:"read_buffer_size"`
+			WriteBufferSize      int      `json:"write_buffer_size"`
+			CompressedFileSuffix string   `json:"compressed_file_suffix"`
+			GetOnly              bool     `json:"get_only"`
+			DisableKeepalive     bool     `json:"disable_keepalive"`
+			Network              string   `json:"network"`
+			EnablePrintRoutes    bool     `json:"enable_print_routes"`
+			AttachErrorHandler   bool     `json:"attach_error_handler"`
+			RequestMethods       []string `json:"request_methods"`
+		}{
+			ServerHeader:         "",
+			StrictRouting:        false,
+			CaseSensitive:        false,
+			UnescapePath:         false,
+			Etag:                 false,
+			BodyLimit:            4194304,
+			Concurrency:          262144,
+			ReadTimeout:          -1,
+			WriteTimeout:         -1,
+			IdleTimeout:          -1,
+			ReadBufferSize:       4096,
+			WriteBufferSize:      4096,
+			CompressedFileSuffix: ".gz",
+			GetOnly:              false,
+			DisableKeepalive:     false,
+			Network:              "tcp",
+			EnablePrintRoutes:    true,
+			AttachErrorHandler:   true,
+			RequestMethods:       []string{"GET"},
+		},
+	}
+	server, err := NewServer("http", serverConfig)
+	if err != nil {
+		t.Errorf("Creating HTTP Server --> Expected: %v, but got %v", nil, err)
+		return
+	}
+
+	server.AddRoute(fiber.MethodPost, "/p", func(c *fiber.Ctx) error {
+		return nil
+	}, "TestPOST", []string{}, []string{})
+
+	server.AddRoute(fiber.MethodGet, "/g", func(c *fiber.Ctx) error {
+		return nil
+	}, "TestGET", []string{}, []string{})
+
+	routes := server.app.GetRoutes()
+	if len(routes) != 1 {
+		t.Errorf("Expected 1 route added to server, but got %v", len(routes))
+		return
+	}
+
+	// check the name of the route
+	r := server.app.GetRoute("TestPOST")
+	if r.Path == "/p" {
+		t.Errorf("Expected to get route '%v', but got '%v'", "/", r.Path)
+		return
+	}
+}
