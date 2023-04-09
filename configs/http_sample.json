@@ -23,7 +23,8 @@
         "disable_keepalive": false,
         "network": "tcp",
         "enable_print_routes": true,
-        "attach_error_handler": true
+        "attach_error_handler": true,
+        "request_methods": ["ALL"]
       },
       "middlewares": {
         "order": ["logger", "favicon"],
