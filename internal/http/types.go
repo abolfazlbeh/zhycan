@@ -1,9 +1,12 @@
 package http
 
+import "github.com/gofiber/fiber/v2"
+
 type ServerConfig struct {
 	ListenAddress string   `json:"addr"`
 	Name          string   `json:"name"`
 	Versions      []string `json:"versions"`
+	SupportStatic bool     `json:"support_static"`
 	Config        struct {
 		ServerHeader         string   `json:"server_header"`
 		StrictRouting        bool     `json:"strict_routing"`
@@ -28,6 +31,11 @@ type ServerConfig struct {
 	Middlewares struct {
 		Order []string `json:"order"`
 	} `json:"middlewares"`
+	Static struct {
+		Prefix string       `json:"prefix"`
+		Root   string       `json:"root"`
+		Config fiber.Static `json:"config"`
+	} `json:"static"`
 }
 
 // LoggerMiddlewareConfig - defines the config for middleware.

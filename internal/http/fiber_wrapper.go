@@ -34,8 +34,10 @@ func (s *Server) init(name string, serverConfig ServerConfig) error {
 	// Get application name from the config manager
 	appName := config.GetManager().GetName()
 	requestMethods := fiber.DefaultMethods
-	if s.config.Config.RequestMethods[0] != "ALL" {
-		requestMethods = s.config.Config.RequestMethods
+	if s.config.Config.RequestMethods != nil {
+		if s.config.Config.RequestMethods[0] != "ALL" {
+			requestMethods = s.config.Config.RequestMethods
+		}
 	}
 	s.defaultRequestMethods = requestMethods
 
@@ -44,6 +46,11 @@ func (s *Server) init(name string, serverConfig ServerConfig) error {
 		AppName:        appName,
 		RequestMethods: requestMethods,
 	})
+
+	if s.config.SupportStatic == true {
+		s.setupStatic()
+	}
+
 	s.groups = make(map[string]fiber.Router)
 	s.supportedMiddlewares = []string{
 		"logger",
@@ -124,6 +131,10 @@ func (s *Server) addGroup(keyName string, groupName string, router fiber.Router,
 	} else {
 		s.groups[keyName] = router.Group(groupName, f)
 	}
+}
+
+func (s *Server) setupStatic() {
+	s.app.Static(s.config.Static.Prefix, s.config.Static.Root, s.config.Static.Config)
 }
 
 // MARK: Public functions
