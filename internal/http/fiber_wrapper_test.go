@@ -1,6 +1,7 @@
 package http
 
 import (
+	"errors"
 	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/utils"
@@ -513,4 +514,35 @@ func TestFiberWrapper_StaticHandling(t *testing.T) {
 </body>
 </html>`
 	utils.AssertEqual(t, expectedText, string(body), "Unmatched content")
+}
+
+func TestFiberWrapper_AddRouteWithMultipleHandler(t *testing.T) {
+	serverConfig := ServerConfig{ListenAddress: ":3000"}
+	server, err := NewServer("http", serverConfig)
+	if err != nil {
+		t.Errorf("Creating HTTP Server --> Expected: %v, but got %v", nil, err)
+		return
+	}
+
+	server.AddRouteWithMultiHandlers(fiber.MethodGet, "/", []func(c *fiber.Ctx) error{
+		func(c *fiber.Ctx) error { return nil },
+		func(c *fiber.Ctx) error { return errors.New("error") },
+	}, "TestGet", []string{}, []string{})
+
+	routes := server.app.GetRoutes()
+	if len(routes) == 0 {
+		t.Errorf("Expected 1 routes added to server, but got %v", len(routes))
+		return
+	}
+
+	// check the name of the route
+	r := server.app.GetRoute("TestGet")
+	if r.Method != fiber.MethodGet {
+		t.Errorf("Expected to get method %v, but got %v", fiber.MethodGet, r.Method)
+		return
+	}
+	if r.Path != "/" {
+		t.Errorf("Expected to get route '%v', but got '%v'", "/", r.Path)
+		return
+	}
 }
