@@ -2,6 +2,7 @@ package http
 
 import (
 	"encoding/json"
+	"github.com/gofiber/fiber/v2"
 	"reflect"
 	"testing"
 )
@@ -12,6 +13,7 @@ func TestServerConfig_UnmarshalJson(t *testing.T) {
       "addr":                   ":3000",
       "name":                   "s1",
 	  "versions":               ["v1", "v2"],
+	  "support_static":         true,
       "conf": {
         "server_header": "",
         "strict_routing": false,
@@ -40,17 +42,31 @@ func TestServerConfig_UnmarshalJson(t *testing.T) {
             "url": "/favicon.ico",
             "cache_control": "public, max-age=31536000"
         }
-	  }
+	  },
+      "static": {
+        "prefix": "/",
+        "root": "./public",
+        "config": {
+          "compress": false,
+          "byte_range": false,
+          "browse": false,
+          "download": false,
+          "index": "index.html",
+          "cache_duration": 10,
+          "max_age": 0
+        }
+      }
     }`)
 
 	// Test expected result
-	v := make([]string, 0)
-	v = append(v, "v1")
-	v = append(v, "v1")
+	v := make([]string, 2)
+	v[0] = "v1"
+	v[1] = "v2"
 	expected := ServerConfig{
 		ListenAddress: ":3000",
 		Name:          "s1",
 		Versions:      v,
+		SupportStatic: true,
 		Config: struct {
 			ServerHeader         string   `json:"server_header"`
 			StrictRouting        bool     `json:"strict_routing"`
@@ -95,6 +111,19 @@ func TestServerConfig_UnmarshalJson(t *testing.T) {
 		Middlewares: struct {
 			Order []string `json:"order"`
 		}{Order: []string{"logger", "favicon"}},
+		Static: struct {
+			Prefix string       `json:"prefix"`
+			Root   string       `json:"root"`
+			Config fiber.Static `json:"config"`
+		}{Prefix: "/", Root: "./public", Config: fiber.Static{
+			Compress:      false,
+			ByteRange:     false,
+			Browse:        false,
+			Download:      false,
+			Index:         "index.html",
+			CacheDuration: 10,
+			MaxAge:        0,
+		}},
 	}
 
 	// Unmarshal the input data into a ServerConfig instance
@@ -105,7 +134,7 @@ func TestServerConfig_UnmarshalJson(t *testing.T) {
 	}
 
 	// Check if the result is what we expected
-	if reflect.DeepEqual(config, expected) {
+	if !reflect.DeepEqual(config, expected) {
 		t.Errorf("Expected %+v, got %+v", expected, config)
 	}
 }

@@ -3,8 +3,12 @@ package http
 import (
 	"fmt"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/utils"
+	"io"
+	"net/http/httptest"
 	"reflect"
 	"testing"
+	"time"
 )
 
 func TestFiberWrapper_startServer(t *testing.T) {
@@ -469,4 +473,44 @@ func TestFiberWrapper_RequestMethodsFilter(t *testing.T) {
 		t.Errorf("Expected to get route '%v', but got '%v'", "/", r.Path)
 		return
 	}
+}
+
+func TestFiberWrapper_StaticHandling(t *testing.T) {
+	serverConfig := ServerConfig{
+		ListenAddress: ":3000",
+		SupportStatic: true,
+		Static: struct {
+			Prefix string       `json:"prefix"`
+			Root   string       `json:"root"`
+			Config fiber.Static `json:"config"`
+		}{
+			Prefix: "/public",
+			Root:   "../../data/static/",
+			Config: fiber.Static{Compress: false, ByteRange: false, Browse: false, Download: false, Index: "index.html", CacheDuration: 10 * time.Second, MaxAge: 0, ModifyResponse: nil, Next: nil},
+		},
+	}
+
+	server, err := NewServer("http", serverConfig)
+	if err != nil {
+		t.Errorf("Creating HTTP Server --> Expected: %v, but got %v", nil, err)
+		return
+	}
+	go server.Start()
+	defer server.Stop()
+
+	req := httptest.NewRequest(fiber.MethodGet, "http://127.0.0.1:3000/public/index.html", nil)
+	resp, err := server.app.Test(req)
+	utils.AssertEqual(t, nil, err, "Expected to not get error")
+	utils.AssertEqual(t, 200, resp.StatusCode, "Status code")
+
+	body, err := io.ReadAll(resp.Body)
+	utils.AssertEqual(t, nil, err, "Response Body Result")
+
+	expectedText := `<!DOCTYPE html>
+<html lang="en">
+<body>
+    Hi
+</body>
+</html>`
+	utils.AssertEqual(t, expectedText, string(body), "Unmatched content")
 }
