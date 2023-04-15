@@ -291,10 +291,103 @@ func (s *Server) AddGroup(groupName string, f func(c *fiber.Ctx) error, groups .
 	return nil
 }
 
+// GetRouteByName _ get route by its name
 func (s *Server) GetRouteByName(name string) (*fiber.Route, error) {
 	route := s.app.GetRoute(name)
 	if route.Name != name {
 		return nil, NewGetRouteByNameErr(name)
 	}
 	return &route, nil
+}
+
+// AddRouteWithMultiHandlers - add a route to the server
+func (s *Server) AddRouteWithMultiHandlers(method string, path string, f []func(c *fiber.Ctx) error, routeName string, versions []string, groups []string) error {
+	// check that whether is acceptable to add this route method
+	if utils.ArrayContains(&s.defaultRequestMethods, method) {
+		if len(groups) > 0 {
+			for _, g := range groups {
+				if len(versions) > 0 {
+					for _, v := range versions {
+						if v == "all" {
+							for k := range s.versionGroups {
+								newKey := fmt.Sprintf("%s.%s", k, g)
+								if router, ok := s.groups[newKey]; ok {
+									router.Add(method, path, f...)
+									if strings.TrimSpace(routeName) != "" {
+										//router.Name(routeName)
+										s.app.Name(routeName)
+									}
+								}
+							}
+							break
+						} else if v == "" {
+							if router, ok := s.groups[g]; ok {
+								router.Add(method, path, f...)
+								if strings.TrimSpace(routeName) != "" {
+									//router.Name(routeName)
+									s.app.Name(routeName)
+								}
+							}
+							break
+						} else {
+							newKey := fmt.Sprintf("%s.%s", v, g)
+							if router, ok := s.groups[newKey]; ok {
+								router.Add(method, path, f...)
+								if strings.TrimSpace(routeName) != "" {
+									s.app.Name(routeName)
+									//router.Name(routeName)
+								}
+							}
+						}
+					}
+				} else {
+					if savedGroup, ok := s.groups[g]; ok {
+						savedGroup.Add(method, path, f...)
+						if strings.TrimSpace(routeName) != "" {
+							//savedGroup.Name(routeName)
+							s.app.Name(routeName)
+
+						}
+					}
+				}
+			}
+		} else {
+			if len(versions) > 0 {
+				for _, v := range versions {
+					if router, ok := s.versionGroups[v]; ok {
+						router.Add(method, path, f...)
+						if strings.TrimSpace(routeName) != "" {
+							//router.Name(routeName)
+							s.app.Name(routeName)
+						}
+					} else {
+						if v == "all" {
+							for _, router1 := range s.versionGroups {
+								router1.Add(method, path, f...)
+								if strings.TrimSpace(routeName) != "" {
+									//router1.Name(routeName)
+									s.app.Name(routeName)
+								}
+							}
+							break
+						} else if v == "" {
+							s.app.Add(method, path, f...)
+							if strings.TrimSpace(routeName) != "" {
+								s.app.Name(routeName)
+							}
+							break
+						}
+					}
+				}
+			} else {
+				s.app.Add(method, path, f...)
+				if strings.TrimSpace(routeName) != "" {
+					s.app.Name(routeName)
+				}
+			}
+		}
+		return nil
+	}
+
+	return NewNotSupportedHttpMethodErr(method)
 }
