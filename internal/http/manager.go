@@ -170,3 +170,22 @@ func (m *manager) AddGroup(groupName string, f func(c *fiber.Ctx) error, groupsN
 	}
 	return NewAddGroupToNilServerErr(groupName)
 }
+
+// AttachErrorHandler - attach a custom error handler to the server with specified name
+func (m *manager) AttachErrorHandler(f func(ctx *fiber.Ctx, err error) error, serverNames ...string) error {
+	if len(serverNames) > 0 {
+		for _, sn := range serverNames {
+			if s, ok := m.servers[sn]; ok {
+				s.AttachErrorHandler(f)
+				return nil
+			}
+		}
+	} else {
+		if m.defaultServer != "" {
+			m.servers[m.defaultServer].AttachErrorHandler(f)
+			return nil
+		}
+	}
+
+	return NewAttachErrorHandlerToNilServerErr(serverNames...)
+}

@@ -99,3 +99,8 @@ func AddBulkHttpGroups(httpGroups []HttpGroup) error {
 	}
 	return nil
 }
+
+// AttachHttpErrorHandler - Attach http error handler to the manager
+func AttachHttpErrorHandler(f func(ctx *fiber.Ctx, err error) error, serverNames ...string) error {
+	return http.GetManager().AttachErrorHandler(f, serverNames...)
+}

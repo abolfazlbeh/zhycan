@@ -5,6 +5,7 @@
       "name":                   "s1",
       "addr": ":3000",
       "versions":               ["v1", "v2"],
+      "support_static":         true,
       "conf": {
         "server_header": "",
         "strict_routing": false,
@@ -24,7 +25,35 @@
         "network": "tcp",
         "enable_print_routes": true,
         "attach_error_handler": true,
-        "request_methods": ["GET"]
+        "request_methods": ["ALL"]
+      },
+      "middlewares": {
+        "order": ["logger", "favicon"],
+        "logger": {
+          "format": "[${time}] ${status} - ${latency} ${method} ${path}\n",
+          "time_format": "15:04:05",
+          "time_zone": "Local",
+          "time_interval": 500,
+          "output": "stdout"
+        },
+        "favicon": {
+          "file": "./favicon.ico",
+          "url": "/favicon.ico",
+          "cache_control": "public, max-age=31536000"
+        }
+      },
+      "static": {
+        "prefix": "/",
+        "root": "./public",
+        "config": {
+          "compress": false,
+          "byte_range": false,
+          "browse": false,
+          "download": false,
+          "index": "index.html",
+          "cache_duration": 10,
+          "max_age": 0
+        }
       }
     }
   ]

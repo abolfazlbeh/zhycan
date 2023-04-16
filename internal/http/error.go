@@ -164,3 +164,18 @@ func (err *AddGroupToNilServerErr) Error() string {
 func NewAddGroupToNilServerErr(name string) error {
 	return &AddGroupToNilServerErr{groupName: name}
 }
+
+// AttachErrorHandlerToNilServerErr Error
+type AttachErrorHandlerToNilServerErr struct {
+	serverNames []string
+}
+
+// Error method - satisfying error interface
+func (err *AttachErrorHandlerToNilServerErr) Error() string {
+	return fmt.Sprintf("There is no server to attach error handler: %v", err.serverNames)
+}
+
+// NewAttachErrorHandlerToNilServerErr - return a new instance of AttachErrorHandlerToNilServerErr
+func NewAttachErrorHandlerToNilServerErr(serverNames ...string) error {
+	return &AttachErrorHandlerToNilServerErr{serverNames: serverNames}
+}

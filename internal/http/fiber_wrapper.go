@@ -43,6 +43,7 @@ func (s *Server) init(name string, serverConfig ServerConfig) error {
 
 	s.app = fiber.New(fiber.Config{
 		Prefork:        false,
+		ServerHeader:   "Zhycan",
 		AppName:        appName,
 		RequestMethods: requestMethods,
 	})
@@ -168,6 +169,13 @@ func (s *Server) Stop() error {
 		return NewShutdownServerErr(err)
 	}
 	return nil
+}
+
+// AttachErrorHandler - attach a custom error handler to the server
+func (s *Server) AttachErrorHandler(f func(ctx *fiber.Ctx, err error) error) {
+	oldConfig := s.app.Config()
+	oldConfig.ErrorHandler = f
+	s.app = fiber.New(oldConfig)
 }
 
 // AddRoute - add a route to the server
