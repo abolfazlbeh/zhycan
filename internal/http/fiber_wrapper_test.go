@@ -546,3 +546,35 @@ func TestFiberWrapper_AddRouteWithMultipleHandler(t *testing.T) {
 		return
 	}
 }
+
+func TestFiberWrapper_CustomErrorHandler(t *testing.T) {
+	serverConfig := ServerConfig{ListenAddress: ":3000"}
+	server, err := NewServer("http", serverConfig)
+	if err != nil {
+		t.Errorf("Creating HTTP Server --> Expected: %v, but got %v", nil, err)
+		return
+	}
+
+	server.AttachErrorHandler(func(ctx *fiber.Ctx, err error) error {
+		// Status code defaults to 500
+		code := fiber.StatusInternalServerError
+
+		// Retrieve the custom status code if it's a *fiber.Error
+		var e *fiber.Error
+		if errors.As(err, &e) {
+			code = e.Code
+		}
+
+		utils.AssertEqual(t, fiber.StatusNotFound, code, "Status code")
+		ctx.Status(code).SendString(e.Error())
+		return nil
+	})
+
+	go server.Start()
+	defer server.Stop()
+
+	req := httptest.NewRequest(fiber.MethodGet, "http://127.0.0.1:3000/t", nil)
+	resp, err := server.app.Test(req)
+	utils.AssertEqual(t, nil, err, "Expected to not get error")
+	utils.AssertEqual(t, 404, resp.StatusCode, "Status code")
+}

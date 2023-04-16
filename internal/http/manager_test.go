@@ -1,7 +1,10 @@
 package http
 
 import (
+	"errors"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/utils"
+	"net/http/httptest"
 	"reflect"
 	"testing"
 	"zhycan/internal/config"
@@ -155,6 +158,40 @@ func TestManager_GetRouteByName(t *testing.T) {
 		t.Errorf("Expected to get the route name %v, but got %v", routeName, route1.Name)
 		return
 	}
+}
+
+func TestManager_AttachErrorHandler(t *testing.T) {
+	makeReadyConfigManager()
+
+	// Get the first server
+	m := GetManager()
+	if len(m.servers) == 0 {
+		t.Errorf("Expected manager to have at least one server, got '%d'", len(m.servers))
+		return
+	}
+
+	m.AttachErrorHandler(func(ctx *fiber.Ctx, err error) error {
+		// Status code defaults to 500
+		code := fiber.StatusInternalServerError
+
+		// Retrieve the custom status code if it's a *fiber.Error
+		var e *fiber.Error
+		if errors.As(err, &e) {
+			code = e.Code
+		}
+
+		utils.AssertEqual(t, fiber.StatusNotFound, code, "Status code")
+		ctx.Status(code).SendString(e.Error())
+		return nil
+	})
+
+	m.StartServers()
+	defer m.StopServers()
+
+	req := httptest.NewRequest(fiber.MethodGet, "http://127.0.0.1:3000/t", nil)
+	resp, err := m.servers["s1"].app.Test(req)
+	utils.AssertEqual(t, nil, err, "Expected to not get error")
+	utils.AssertEqual(t, 404, resp.StatusCode, "Status code")
 }
 
 func makeReadyConfigManager() {
