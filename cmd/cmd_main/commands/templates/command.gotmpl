@@ -1,0 +1,42 @@
+/*
+Create By Zhycan Framework
+
+Copyright © {{.Year}}
+Project: {{.ProjectName}}
+File: `{{.CommandName}}_command.go` --> {{ .Time.Format .TimeFormat }} by {{.CreatorUserName}}
+------------------------------
+*/
+package commands
+
+import (
+	"github.com/spf13/cobra"
+	"os"
+)
+
+func New{{.CommandName}}Cmd() *cobra.Command {
+    {{.CommandName}}Cmd := &cobra.Command{
+        Use:   "{{.CommandName}}",
+        Short: `A brief description of this command`,
+        Long:  `A longer description about this command`,
+        Run:   func(cmd *cobra.Command, args []string) {
+            // --- you actions here ---
+        }
+    }
+
+    // Here you will define your flags and configuration settings.
+    // Cobra supports persistent flags, which, if defined here,
+    // will be global for your application.
+
+    // {{.CommandName}}Cmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.test-corba-cli.yaml)")
+
+    // Cobra also supports local flags, which will only run
+    // when this action is called directly.
+
+    //{{.CommandName}}Cmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+
+	// MARK:Commands --- And Sub Commands Below ---
+	// <place_your_command_here> -- change this with your command to add sub command
+	// {{.CommandName}}Cmd.AddCommand(<place_your_command_here>)
+
+    return {{.CommandName}}Cmd
+}
