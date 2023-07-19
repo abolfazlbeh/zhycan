@@ -2,12 +2,12 @@ package watcher
 
 import (
 	"fmt"
+	"github.com/abolfazlbeh/zhycan/internal/config"
 	"github.com/radovskyb/watcher"
 	"log"
 	"regexp"
 	"sync"
 	"time"
-	"zhycan/internal/config"
 )
 
 // Mark: manager

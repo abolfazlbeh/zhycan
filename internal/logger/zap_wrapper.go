@@ -4,14 +4,14 @@ package logger
 import (
 	"errors"
 	"fmt"
+	"github.com/abolfazlbeh/zhycan/internal/config"
+	"github.com/abolfazlbeh/zhycan/internal/utils"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"os"
 	"path/filepath"
 	"strings"
 	"sync"
-	"zhycan/internal/config"
-	"zhycan/internal/utils"
 )
 
 // Mark: ZapWrapper

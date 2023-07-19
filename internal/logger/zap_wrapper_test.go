@@ -3,10 +3,10 @@ package logger
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/abolfazlbeh/zhycan/internal/config"
 	"os"
 	"testing"
 	"time"
-	"zhycan/internal/config"
 )
 
 func Test_ZapFileLogger(t *testing.T) {

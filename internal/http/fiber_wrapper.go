@@ -3,14 +3,14 @@ package http
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/abolfazlbeh/zhycan/internal/config"
+	"github.com/abolfazlbeh/zhycan/internal/utils"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/favicon"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"os"
 	"strings"
 	"time"
-	"zhycan/internal/config"
-	"zhycan/internal/utils"
 )
 
 // Mark: Definitions

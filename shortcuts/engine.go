@@ -1,6 +1,6 @@
 package shortcuts
 
-import "zhycan/internal/engine"
+import "github.com/abolfazlbeh/zhycan/internal/engine"
 
 // RegisterRestfulApp - register the restful application to the engine
 func RegisterRestfulApp(app engine.RestfulApp) error {
