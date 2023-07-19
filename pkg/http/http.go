@@ -1,4 +1,4 @@
-package shortcuts
+package http
 
 import (
 	"github.com/abolfazlbeh/zhycan/internal/http"
