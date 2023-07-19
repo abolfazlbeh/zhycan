@@ -1,8 +1,8 @@
 package shortcuts
 
 import (
+	"github.com/abolfazlbeh/zhycan/internal/logger"
 	"time"
-	"zhycan/internal/logger"
 )
 
 type LogError logger.Error

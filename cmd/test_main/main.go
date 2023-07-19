@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/abolfazlbeh/zhycan/internal/config"
 	"github.com/radovskyb/watcher"
 	"log"
 	"os"
@@ -9,7 +10,6 @@ import (
 	"regexp"
 	"syscall"
 	"time"
-	"zhycan/internal/config"
 )
 
 func main() {

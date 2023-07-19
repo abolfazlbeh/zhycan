@@ -2,13 +2,13 @@ package logger
 
 import (
 	"fmt"
+	"github.com/abolfazlbeh/zhycan/internal/config"
 	"io"
 	"os"
 	"reflect"
 	"strings"
 	"testing"
 	"time"
-	"zhycan/internal/config"
 )
 
 func Test_ZhycanConsoleLogger(t *testing.T) {

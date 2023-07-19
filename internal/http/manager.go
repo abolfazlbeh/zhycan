@@ -2,11 +2,11 @@ package http
 
 import (
 	"encoding/json"
+	"github.com/abolfazlbeh/zhycan/internal/config"
+	"github.com/abolfazlbeh/zhycan/internal/utils"
 	"github.com/gofiber/fiber/v2"
 	"log"
 	"sync"
-	"zhycan/internal/config"
-	"zhycan/internal/utils"
 )
 
 // Mark: manager

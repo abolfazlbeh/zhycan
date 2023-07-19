@@ -1,8 +1,8 @@
 package shortcuts
 
 import (
+	"github.com/abolfazlbeh/zhycan/internal/http"
 	"github.com/gofiber/fiber/v2"
-	"zhycan/internal/http"
 )
 
 // HttpRoute - Structure of the route

@@ -58,6 +58,7 @@ func Test_ExecuteInitCmd(t *testing.T) {
 
 	// Check the app files creation
 	expectedStr += "\n" + fmt.Sprintf(AppControllerIsCreated)
+	expectedStr += "\n" + fmt.Sprintf(GoModTidyExecuted)
 
 	if string(out) != expectedStr {
 		t.Errorf("Expected %v, but got: %v", expectedStr, string(out))
