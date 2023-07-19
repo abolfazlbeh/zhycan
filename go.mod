@@ -1,4 +1,4 @@
-module zhycan
+module github.com/abolfazlbeh/zhycan
 
 go 1.19
 

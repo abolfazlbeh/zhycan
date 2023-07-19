@@ -2,9 +2,9 @@ package logger
 
 // Imports needed list
 import (
+	"github.com/abolfazlbeh/zhycan/internal/config"
 	"log"
 	"sync"
-	"zhycan/internal/config"
 )
 
 // Mark: manager

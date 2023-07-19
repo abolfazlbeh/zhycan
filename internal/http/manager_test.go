@@ -2,12 +2,12 @@ package http
 
 import (
 	"errors"
+	"github.com/abolfazlbeh/zhycan/internal/config"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/utils"
 	"net/http/httptest"
 	"reflect"
 	"testing"
-	"zhycan/internal/config"
 )
 
 func TestManager_Init(t *testing.T) {

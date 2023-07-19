@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/spf13/cobra"
 	"os"
@@ -121,6 +122,65 @@ func initCmdExecute(cmd *cobra.Command, args []string) {
 	if err != nil {
 		return
 	}
+
+	err = createAppDirFiles(cmd, expectedProjectPath, projectName, currentUser.Username, year)
+	if err != nil {
+		return
+	}
+
+	err = execGoModTidy(cmd, expectedProjectPath)
+	if err != nil {
+		return
+	}
+}
+
+func execGoModTidy(cmd *cobra.Command, expectedProjectPath string) error {
+	const ShellToUse = "bash"
+
+	// get current directory
+	mydir, err := os.Getwd()
+	if err != nil {
+		fmt.Fprintln(cmd.OutOrStdout())
+		fmt.Fprintf(cmd.OutOrStdout(), GoModTidyExecutedError, err)
+		return err
+	}
+
+	err = os.Chdir(expectedProjectPath)
+	if err != nil {
+		fmt.Fprintln(cmd.OutOrStdout())
+		fmt.Fprintf(cmd.OutOrStdout(), GoModTidyExecutedError, err)
+		return err
+	}
+
+	var stderr bytes.Buffer
+
+	modTidyCmd := exec.Command("go", "mod", "tidy")
+	modTidyCmd.Stderr = &stderr
+
+	cmdErr := modTidyCmd.Start()
+	if cmdErr != nil {
+		fmt.Fprintln(cmd.OutOrStdout())
+		fmt.Fprintf(cmd.OutOrStdout(), GoModTidyExecutedError, cmdErr)
+		return cmdErr
+	}
+
+	cmdErr = modTidyCmd.Wait()
+	if cmdErr != nil {
+		fmt.Fprintln(cmd.OutOrStdout())
+		fmt.Fprintf(cmd.OutOrStdout(), GoModTidyExecutedError, cmdErr)
+		return cmdErr
+	}
+
+	err = os.Chdir(mydir)
+	if err != nil {
+		fmt.Fprintln(cmd.OutOrStdout())
+		fmt.Fprintf(cmd.OutOrStdout(), GoModTidyExecutedError, err)
+		return err
+	}
+
+	fmt.Fprintln(cmd.OutOrStdout())
+	fmt.Fprintf(cmd.OutOrStdout(), GoModTidyExecuted)
+	return nil
 }
 
 func createAppDirFiles(cmd *cobra.Command, expectedProjectPath string, projectName string, username string, year int) error {
@@ -486,7 +546,19 @@ func createOneConfigFile(cmd *cobra.Command, expectedProjectPath string, configF
 }
 
 func createOneDevConfigFile(cmd *cobra.Command, expectedProjectPath string, configFileName string, tmplFile string, projectName string) error {
-	configPath := filepath.Join(expectedProjectPath, "configs", "dev", configFileName)
+	folderPath := filepath.Join(expectedProjectPath, "configs", "dev")
+	if _, err := os.Stat(folderPath); os.IsNotExist(err) {
+		// Create a new one
+		err := os.Mkdir(folderPath, os.ModePerm)
+		if err != nil {
+			fmt.Fprintln(cmd.OutOrStdout())
+			fmt.Fprintf(cmd.OutOrStdout(), ConfigDevFileIsNotCreated, configFileName, err)
+			return err
+		}
+	}
+
+	configPath := filepath.Join(folderPath, configFileName)
+
 	file, err := os.Create(configPath)
 	if err != nil {
 		fmt.Fprintln(cmd.OutOrStdout())

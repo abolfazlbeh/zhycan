@@ -38,6 +38,9 @@ const (
 	ConfigFileIsNotCreated    = `Zhycan > Config File "%s" is not created ... %v`
 	ConfigDevFileIsCreated    = `Zhycan > Config File "%s" is created for "dev" mode ...`
 	ConfigDevFileIsNotCreated = `Zhycan > Config File "%s" is not created for "dev" mode ... %v`
+
+	GoModTidyExecutedError = `Zhycan > Cannot execute go mod tidy command ... %v`
+	GoModTidyExecuted      = `Zhycan > "go mod tidy" command is executed ...`
 )
 
 const (
@@ -60,8 +63,8 @@ package main
 import (
     "fmt"
     "{{.ProjectName}}/commands"
-    "zhycan/internal/config"
-    "zhycan/internal/logger"
+    "github.com/abolfazlbeh/zhycan/internal/config"
+    "github.com/abolfazlbeh/zhycan/internal/logger"
 )
 
 /*
@@ -347,6 +350,10 @@ File: "app/controller.go" --> {{ .Time.Format .TimeFormat }} by {{.CreatorUserNa
 */
 
 package app
+
+import (
+	"github.com/gofiber/fiber/v2"
+)
 
 // MARK: Controller
 

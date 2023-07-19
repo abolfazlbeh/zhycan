@@ -3,13 +3,13 @@ package commands
 import (
 	"errors"
 	"fmt"
+	"github.com/abolfazlbeh/zhycan/internal/config"
 	"github.com/spf13/cobra"
 	"os"
 	"os/user"
 	"path/filepath"
 	"text/template"
 	"time"
-	"zhycan/internal/config"
 )
 
 const (

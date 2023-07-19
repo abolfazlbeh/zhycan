@@ -3,12 +3,12 @@ package logger
 // Imports needed list
 import (
 	"encoding/json"
+	"github.com/abolfazlbeh/zhycan/internal/config"
+	"github.com/abolfazlbeh/zhycan/internal/utils"
 	"log"
 	"os"
 	"sync"
 	"time"
-	"zhycan/internal/config"
-	"zhycan/internal/utils"
 )
 
 type OutputOption struct {
