@@ -1,4 +1,4 @@
-package shortcuts
+package logger
 
 import (
 	"github.com/abolfazlbeh/zhycan/internal/logger"
@@ -9,6 +9,19 @@ type LogError logger.Error
 type LogObject logger.LogObject
 type LogLevel logger.LogLevel
 type LogType logger.LogType
+
+// Some Constants - used with LogLevel
+const (
+	DEBUG   LogLevel = LogLevel(logger.DEBUG)
+	INFO    LogLevel = LogLevel(logger.INFO)
+	WARNING LogLevel = LogLevel(logger.WARNING)
+	ERROR   LogLevel = LogLevel(logger.ERROR)
+)
+
+var (
+	FuncMaintenanceType LogType = LogType(logger.NewLogType(logger.FuncMaintenanceType.String()))
+	DebugType           LogType = LogType(logger.NewLogType(logger.DebugType.String()))
+)
 
 // NewLogObject - enhance method to create and return reference of LogObject
 func NewLogObject(level LogLevel, module string, logType LogType, eventTime time.Time, message interface{}, additional interface{}) *LogObject {
