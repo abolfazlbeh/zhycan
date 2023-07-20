@@ -85,6 +85,7 @@ func main() {
         return
     }
 
+
     // Testing the logger module works properly
     logger.Log(logger.NewLogObject(
         logger.INFO, "Logger Module Works Like A Charm ...", logger.FuncMaintenanceType, time.Now().UTC(), "", nil))
