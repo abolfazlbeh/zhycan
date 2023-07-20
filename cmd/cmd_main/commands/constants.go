@@ -273,13 +273,12 @@ DerivedData/
   "config_remote_infra": "grpc",
   "config_remote_duration": 300,
   "modules": [
-    {"name":"logger", "type": "local"},
-    {"name":"server", "type": "remote"}
+    {"name":"logger", "type": "local"}
   ]
 }`
 	loggerConfigTmpl = `{
   "type": "zap",
-  "output": ["console", "file"],
+  "outputs": ["console", "file"],
   "channel_size": 1000,
   "options": ["caller", "stackTrace"],
   "console": {
