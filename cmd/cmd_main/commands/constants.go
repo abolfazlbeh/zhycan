@@ -63,9 +63,8 @@ package main
 import (
     "fmt"
     "{{.ProjectName}}/commands"
-    "github.com/abolfazlbeh/zhycan/pkg/config"
-    "github.com/abolfazlbeh/zhycan/pkg/logger"
-    "time"
+    "github.com/abolfazlbeh/zhycan/internal/config"
+    "github.com/abolfazlbeh/zhycan/internal/logger"
 )
 
 /*
@@ -79,16 +78,27 @@ func main() {
     initialConfigMode := "dev"            // it can be override by environment value --> the value can be "dev" and "prod" and whatever you want
     configPrefix := "{{.ProjectName}}"    // this will be used in reading value from environment with this prefix
 
-    err := config.InitializeManager(baseConfigPath, initialConfigMode, configPrefix)
+    err := config.CreateManager(baseConfigPath, initialConfigMode, configPrefix)
     if err != nil {
         fmt.Println(err)
         return
     }
 
-    // Testing the logger module works properly
-    logger.Log(logger.NewLogObject(
-        logger.INFO, "Logger Module Works Like A Charm ...", logger.FuncMaintenanceType, time.Now().UTC(), "", nil))
+    // Wait for all config files initialized
+    for {
+        flag := config.GetManager().IsInitialized()
+        if flag {
+            break
+        }
+        time.Sleep(200 * time.Millisecond)
+    }
 
+    // Testing the logger module works properly
+	l, _ := logger.GetManager().GetLogger()
+	if l != nil {
+		l.Log(logger.NewLogObject(
+			logger.INFO, "Logger Module Works Like A Charm ...", logger.FuncMaintenanceType, time.Now().UTC(), "", nil))
+	}
 
     // Execute the provided command
     commands.Execute()
