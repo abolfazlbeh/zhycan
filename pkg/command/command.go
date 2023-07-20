@@ -1,4 +1,4 @@
-package shortcuts
+package command
 
 //
 //import (
