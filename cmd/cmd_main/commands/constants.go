@@ -79,19 +79,10 @@ func main() {
     initialConfigMode := "dev"            // it can be override by environment value --> the value can be "dev" and "prod" and whatever you want
     configPrefix := "{{.ProjectName}}"    // this will be used in reading value from environment with this prefix
 
-    err := config.CreateManager(baseConfigPath, initialConfigMode, configPrefix)
+    err := config.InitializeManager(baseConfigPath, initialConfigMode, configPrefix)
     if err != nil {
         fmt.Println(err)
         return
-    }
-
-    // Wait for all config files initialized
-    for {
-        flag := config.GetManager().IsInitialized()
-        if flag {
-            break
-        }
-        time.Sleep(200 * time.Millisecond)
     }
 
     // Testing the logger module works properly
