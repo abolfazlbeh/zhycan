@@ -1,4 +1,4 @@
-package engine
+package shortcuts
 
 import "github.com/abolfazlbeh/zhycan/internal/engine"
 

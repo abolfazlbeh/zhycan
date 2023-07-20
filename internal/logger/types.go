@@ -8,7 +8,7 @@ import (
 
 // Some Constants
 const (
-	MAX = 6
+	max = 6
 )
 
 // LogObject - all methods that want to log must transfer object of this.
@@ -38,7 +38,7 @@ type LogLevel int
 
 // Some Constants - used with LogLevel
 const (
-	DEBUG LogLevel = MAX - iota
+	DEBUG LogLevel = max - iota
 	INFO
 	WARNING
 	ERROR
@@ -84,10 +84,6 @@ func StringToLogLevel(level string) LogLevel {
 // LogType Object
 type LogType struct {
 	name string
-}
-
-func NewLogType(name string) LogType {
-	return LogType{name: name}
 }
 
 var (

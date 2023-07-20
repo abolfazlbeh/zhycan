@@ -63,9 +63,8 @@ package main
 import (
     "fmt"
     "{{.ProjectName}}/commands"
-    "github.com/abolfazlbeh/zhycan/pkg/config"
-    "github.com/abolfazlbeh/zhycan/pkg/logger"
-    "time"
+    "github.com/abolfazlbeh/zhycan/internal/config"
+    "github.com/abolfazlbeh/zhycan/internal/logger"
 )
 
 /*
@@ -95,9 +94,11 @@ func main() {
     }
 
     // Testing the logger module works properly
-    logger.Log(logger.NewLogObject(
-        logger.INFO, "Logger Module Works Like A Charm ...", logger.FuncMaintenanceType, time.Now().UTC(), "", nil))
-
+	l, _ := logger.GetManager().GetLogger()
+	if l != nil {
+		l.Log(logger.NewLogObject(
+			logger.INFO, "Logger Module Works Like A Charm ...", logger.FuncMaintenanceType, time.Now().UTC(), "", nil))
+	}
 
     // Execute the provided command
     commands.Execute()
