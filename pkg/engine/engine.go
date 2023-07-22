@@ -6,8 +6,8 @@ import (
 	"strings"
 )
 
-// RegisterRestfulApp - register the restful application to the engine
-func RegisterRestfulApp(app engine.RestfulApp) error {
+// RegisterRestfulController - register the restful controller to the engine
+func RegisterRestfulController(app engine.RestfulApp) error {
 	routes := app.Routes()
 
 	controllerName := app.GetName()
