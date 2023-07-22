@@ -182,9 +182,23 @@ func (s *Server) AttachErrorHandler(f func(ctx *fiber.Ctx, err error) error) {
 func (s *Server) AddRoute(method string, path string, f func(c *fiber.Ctx) error, routeName string, versions []string, groups []string) error {
 	// check that whether is acceptable to add this route method
 	if utils.ArrayContains(&s.defaultRequestMethods, method) {
-		if len(groups) > 0 {
+		groupsExist := false
+		if groups != nil {
+			if len(groups) > 0 {
+				groupsExist = true
+			}
+		}
+
+		versionsExist := false
+		if versions != nil {
+			if len(versions) > 0 {
+				versionsExist = true
+			}
+		}
+
+		if groupsExist {
 			for _, g := range groups {
-				if len(versions) > 0 {
+				if versionsExist {
 					for _, v := range versions {
 						if v == "all" {
 							for k := range s.versionGroups {
@@ -230,7 +244,7 @@ func (s *Server) AddRoute(method string, path string, f func(c *fiber.Ctx) error
 				}
 			}
 		} else {
-			if len(versions) > 0 {
+			if versionsExist {
 				for _, v := range versions {
 					if router, ok := s.versionGroups[v]; ok {
 						router.Add(method, path, f)
