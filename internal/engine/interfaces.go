@@ -1,5 +1,8 @@
 package engine
 
+import "github.com/abolfazlbeh/zhycan/pkg/http"
+
 type RestfulApp interface {
-	Routes() error
+	Routes() []http.HttpRoute
+	GetName() string
 }

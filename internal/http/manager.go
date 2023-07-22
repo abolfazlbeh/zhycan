@@ -157,15 +157,33 @@ func (m *manager) GetRouteByName(routeName string, serverName ...string) (*fiber
 
 // AddGroup - add a group to the server with specified name
 func (m *manager) AddGroup(groupName string, f func(c *fiber.Ctx) error, groupsName []string, serverName ...string) error {
-	if len(serverName) > 0 {
-		for _, sn := range serverName {
-			if s, ok := m.servers[sn]; ok {
-				return s.AddGroup(groupName, f, groupsName...)
+	if serverName != nil {
+		if len(serverName) > 0 {
+			for _, sn := range serverName {
+				if s, ok := m.servers[sn]; ok {
+					if groupsName != nil {
+						return s.AddGroup(groupName, f, groupsName...)
+					} else {
+						return s.AddGroup(groupName, f, []string{}...)
+					}
+				}
+			}
+		} else {
+			if m.defaultServer != "" {
+				if groupsName != nil {
+					return m.servers[m.defaultServer].AddGroup(groupName, f, groupsName...)
+				} else {
+					return m.servers[m.defaultServer].AddGroup(groupName, f, []string{}...)
+				}
 			}
 		}
 	} else {
 		if m.defaultServer != "" {
-			return m.servers[m.defaultServer].AddGroup(groupName, f, groupsName...)
+			if groupsName != nil {
+				return m.servers[m.defaultServer].AddGroup(groupName, f, groupsName...)
+			} else {
+				return m.servers[m.defaultServer].AddGroup(groupName, f, []string{}...)
+			}
 		}
 	}
 	return NewAddGroupToNilServerErr(groupName)
