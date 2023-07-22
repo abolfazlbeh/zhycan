@@ -9,9 +9,20 @@ File: `app/app.go` --> {{ .Time.Format .TimeFormat }} by {{.CreatorUserName}}
 
 package app
 
+import (
+    "github.com/abolfazlbeh/zhycan/pkg/engine"
+)
+
 // MARK: App Engine
 
 // App - application engine structure that must satisfy one of the engine interface such as 'engine.RestfulApp', ...
 type App struct {}
 
-// Other parts such as Routes function and ... can be implemented in other files
+// Init - initialize the app
+func (app *App) Init() {
+    err := engine.RegisterRestfulController(&SampleController{Name: "sample"})
+    if err != nil {
+        logger.Log(logger.NewLogObject(
+            logger.ERROR, "App.Init", logger.FuncMaintenanceType, time.Now().UTC(), "Cannot Register Restful Controller", err))
+    }
+}

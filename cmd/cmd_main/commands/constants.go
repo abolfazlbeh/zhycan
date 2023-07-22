@@ -85,11 +85,9 @@ func main() {
         return
     }
 
-
     // Testing the logger module works properly
     logger.Log(logger.NewLogObject(
-        logger.INFO, "Logger Module Works Like A Charm ...", logger.FuncMaintenanceType, time.Now().UTC(), "", nil))
-
+        logger.INFO, "main.go", logger.FuncMaintenanceType, time.Now().UTC(), "Logger Module Works Like A Charm ...", nil))
 
     // Execute the provided command
     commands.Execute()
@@ -342,7 +340,8 @@ File: "app/controller.go" --> {{ .Time.Format .TimeFormat }} by {{.CreatorUserNa
 package app
 
 import (
-	"github.com/gofiber/fiber/v2"
+    "github.com/gofiber/fiber/v2"
+    "github.com/abolfazlbeh/zhycan/pkg/http"
 )
 
 // MARK: Controller
@@ -385,6 +384,13 @@ package app
 // App - application engine structure that must satisfy one of the engine interface such as 'engine.RestfulApp', ...
 type App struct {}
 
-// Other parts such as Routes function and ... can be implemented in other files
+// Init - initialize the app
+func (app *App) Init() {
+    err := engine.RegisterRestfulController(&SampleController{Name: "sample"})
+    if err != nil {
+        logger.Log(logger.NewLogObject(
+            logger.ERROR, "App.Init", logger.FuncMaintenanceType, time.Now().UTC(), "Cannot Register Restful Controller", err))
+    }
+}
 `
 )

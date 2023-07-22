@@ -35,7 +35,7 @@ func main() {
 
     // Testing the logger module works properly
     logger.Log(logger.NewLogObject(
-        logger.INFO, "Logger Module Works Like A Charm ...", logger.FuncMaintenanceType, time.Now().UTC(), "", nil))
+        logger.INFO, "main.go", logger.FuncMaintenanceType, time.Now().UTC(), "Logger Module Works Like A Charm ...", nil))
 
     // Execute the provided command
     commands.Execute()
