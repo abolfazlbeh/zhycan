@@ -35,9 +35,15 @@ func TestSqlWrapper_SqliteConnection(t *testing.T) {
 	//	return
 	//}
 
-	db2 := newWrapper.GetDb()
-	if db2 == nil {
-		t.Errorf("Get Sql Wrapper Instance --> Expected: instance, but got %v", nil)
+	db2, err := newWrapper.GetDb()
+	if err != nil {
+		t.Errorf("Get database instance --> Expected: %v, but got %v", nil, err)
+		return
+	}
+
+	tx := db2.Exec("SELECT 1")
+	if tx.Error != nil {
+		t.Errorf("Query on connected database --> Expected no Error: %v, but got %v", nil, err)
 		return
 	}
 }
