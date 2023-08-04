@@ -14,15 +14,13 @@ import (
 // SqlWrapper struct
 type SqlWrapper[T SqlConfigurable] struct {
 	name             string
-	dbType           string
 	config           T
 	databaseInstance *gorm.DB
 }
 
 // init - SqlWrapper Constructor - It initializes the wrapper
-func (s *SqlWrapper[T]) init(name string, dbType string) error {
+func (s *SqlWrapper[T]) init(name string) error {
 	s.name = name
-	s.dbType = dbType
 
 	// reading config
 	nameParts := strings.Split(s.name, "/")
@@ -48,7 +46,7 @@ func (s *SqlWrapper[T]) init(name string, dbType string) error {
 		s.config = T(reflect.ValueOf(SqliteConfig{
 			FileName: filenameStr.(string),
 			Options:  optionsMap,
-		}).Interface())
+		}).Interface().(T))
 	}
 
 	return nil
@@ -83,7 +81,7 @@ func (s *SqlWrapper[T]) GetDb() (*gorm.DB, error) {
 func NewSqlWrapper[T SqlConfigurable](name string, dbType string) (*SqlWrapper[T], error) {
 	if strings.ToLower(dbType) == "sqlite" {
 		wrapper := &SqlWrapper[T]{}
-		err := wrapper.init(name, dbType)
+		err := wrapper.init(name)
 		if err != nil {
 			return nil, NewCreateSqlWrapperErr(err)
 		}
