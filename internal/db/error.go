@@ -45,3 +45,18 @@ func (err *NotSupportedDbTypeErr) Error() string {
 func NewNotSupportedDbTypeErr(dbType string) error {
 	return &NotSupportedDbTypeErr{dbType: dbType}
 }
+
+// NotExistServiceNameErr Error
+type NotExistServiceNameErr struct {
+	serviceName string
+}
+
+// Error method - satisfying error interface
+func (err *NotExistServiceNameErr) Error() string {
+	return fmt.Sprintf("Instance with service name not exist: %v", err.serviceName)
+}
+
+// NewNotExistServiceNameErr - return a new instance of NotExistServiceNameErr
+func NewNotExistServiceNameErr(serviceName string) error {
+	return &NotExistServiceNameErr{serviceName: serviceName}
+}
