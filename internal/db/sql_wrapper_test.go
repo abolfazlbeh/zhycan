@@ -6,7 +6,7 @@ import (
 )
 
 func TestSqlWrapper_Initialize(t *testing.T) {
-	wrapper := &SqlWrapper[SqliteConfig]{name: "test", dbType: "sqlite"}
+	wrapper := &SqlWrapper[SqliteConfig]{name: "test"}
 	newWrapper, err := NewSqlWrapper[SqliteConfig]("test", "sqlite")
 
 	if err != nil {

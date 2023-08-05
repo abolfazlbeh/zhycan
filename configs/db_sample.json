@@ -22,5 +22,17 @@
       "parseTime": "True",
       "loc": "Local"
     }
+  },
+  "server3": {
+    "type": "postgresql",
+    "db": "databasename",
+    "username": "username",
+    "password": "password",
+    "host": "127.0.0.1",
+    "port": "3306",
+    "options": {
+      "sslmode": "disable",
+      "TimeZone": "Asia/Shanghai"
+    }
   }
 }

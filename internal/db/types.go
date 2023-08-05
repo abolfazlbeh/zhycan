@@ -15,6 +15,15 @@ type MysqlConfig struct {
 	Options      map[string]string `json:"options"`
 }
 
+type PostgresqlConfig struct {
+	DatabaseName string            `json:"db"`
+	Username     string            `json:"username"`
+	Password     string            `json:"password"`
+	Host         string            `json:"host"`
+	Port         string            `json:"port"`
+	Options      map[string]string `json:"options"`
+}
+
 type SqlConfigurable interface {
-	SqliteConfig | MysqlConfig
+	SqliteConfig | MysqlConfig | PostgresqlConfig
 }
