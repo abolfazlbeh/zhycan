@@ -30,7 +30,7 @@ func TestManager_CheckInitialization(t *testing.T) {
 	}
 
 	if v, ok := m.sqliteDbInstances["server1"]; ok {
-		expected := reflect.TypeOf(&SqlWrapper[SqliteConfig]{})
+		expected := reflect.TypeOf(&SqlWrapper[Sqlite]{})
 		got := reflect.ValueOf(v).Type()
 		if got != expected {
 			t.Errorf("Expected manager one sqlite instance: %v, but got: %v ", expected, got)

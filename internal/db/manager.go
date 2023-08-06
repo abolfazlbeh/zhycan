@@ -17,9 +17,9 @@ import (
 type manager struct {
 	name                string
 	lock                sync.Mutex
-	sqliteDbInstances   map[string]*SqlWrapper[SqliteConfig]
-	mysqlDbInstances    map[string]*SqlWrapper[MysqlConfig]
-	postgresDbInstances map[string]*SqlWrapper[PostgresqlConfig]
+	sqliteDbInstances   map[string]*SqlWrapper[Sqlite]
+	mysqlDbInstances    map[string]*SqlWrapper[Mysql]
+	postgresDbInstances map[string]*SqlWrapper[Postgresql]
 	supportedDBs        []string
 
 	isManagerInitialized bool
@@ -50,9 +50,9 @@ func (m *manager) init() {
 		return
 	}
 
-	m.sqliteDbInstances = make(map[string]*SqlWrapper[SqliteConfig])
-	m.mysqlDbInstances = make(map[string]*SqlWrapper[MysqlConfig])
-	m.postgresDbInstances = make(map[string]*SqlWrapper[PostgresqlConfig])
+	m.sqliteDbInstances = make(map[string]*SqlWrapper[Sqlite])
+	m.mysqlDbInstances = make(map[string]*SqlWrapper[Mysql])
+	m.postgresDbInstances = make(map[string]*SqlWrapper[Postgresql])
 
 	for _, item := range connectionsObj.([]interface{}) {
 		dbInstanceName := item.(string)
@@ -68,31 +68,31 @@ func (m *manager) init() {
 		if utils.ArrayContains(&m.supportedDBs, dbType) {
 			switch dbType {
 			case "sqlite":
-				obj, err := NewSqlWrapper[SqliteConfig](fmt.Sprintf("db/%s", dbInstanceName), dbType)
+				obj, err := NewSqlWrapper[Sqlite](fmt.Sprintf("db/%s", dbInstanceName), dbType)
 				if err != nil {
 					// TODO: log error here
 					return
 				}
 
-				m.sqliteDbInstances[dbInstanceName] = reflect.ValueOf(obj).Interface().(*SqlWrapper[SqliteConfig])
+				m.sqliteDbInstances[dbInstanceName] = reflect.ValueOf(obj).Interface().(*SqlWrapper[Sqlite])
 				break
 			case "mysql":
-				obj, err := NewSqlWrapper[MysqlConfig](fmt.Sprintf("db/%s", dbInstanceName), dbType)
+				obj, err := NewSqlWrapper[Mysql](fmt.Sprintf("db/%s", dbInstanceName), dbType)
 				if err != nil {
 					// TODO: log error here
 					return
 				}
 
-				m.mysqlDbInstances[dbInstanceName] = reflect.ValueOf(obj).Interface().(*SqlWrapper[MysqlConfig])
+				m.mysqlDbInstances[dbInstanceName] = reflect.ValueOf(obj).Interface().(*SqlWrapper[Mysql])
 				break
 			case "postgresql":
-				obj, err := NewSqlWrapper[PostgresqlConfig](fmt.Sprintf("db/%s", dbInstanceName), dbType)
+				obj, err := NewSqlWrapper[Postgresql](fmt.Sprintf("db/%s", dbInstanceName), dbType)
 				if err != nil {
 					// TODO: log error here
 					return
 				}
 
-				m.postgresDbInstances[dbInstanceName] = reflect.ValueOf(obj).Interface().(*SqlWrapper[PostgresqlConfig])
+				m.postgresDbInstances[dbInstanceName] = reflect.ValueOf(obj).Interface().(*SqlWrapper[Postgresql])
 				break
 			}
 		}

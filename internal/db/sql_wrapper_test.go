@@ -6,8 +6,8 @@ import (
 )
 
 func TestSqlWrapper_Initialize(t *testing.T) {
-	wrapper := &SqlWrapper[SqliteConfig]{name: "test"}
-	newWrapper, err := NewSqlWrapper[SqliteConfig]("test", "sqlite")
+	wrapper := &SqlWrapper[Sqlite]{name: "test"}
+	newWrapper, err := NewSqlWrapper[Sqlite]("test", "sqlite")
 
 	if err != nil {
 		t.Errorf("Creating Sql Wrapper --> Expected: %v, but got %v", nil, err)
@@ -23,7 +23,7 @@ func TestSqlWrapper_Initialize(t *testing.T) {
 func TestSqlWrapper_SqliteConnection(t *testing.T) {
 	makeReadyConfigManager()
 
-	newWrapper, err := NewSqlWrapper[SqliteConfig]("db/server1", "sqlite")
+	newWrapper, err := NewSqlWrapper[Sqlite]("db/server1", "sqlite")
 	if err != nil {
 		t.Errorf("Creating Sql Wrapper --> Expected: %v, but got %v", nil, err)
 		return
@@ -71,5 +71,7 @@ func TestSqlWrapper_SqliteConnectionConfiguration(t *testing.T) {
 	//	Dialector:                                nil,
 	//	Plugins:                                  nil,
 	//})
+	//
+	//db.Logger.LogMode()
 
 }

@@ -1,6 +1,7 @@
 package db
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/abolfazlbeh/zhycan/internal/config"
 	"gorm.io/driver/mysql"
@@ -17,6 +18,7 @@ import (
 type SqlWrapper[T SqlConfigurable] struct {
 	name             string
 	config           T
+	internalConfig   Config
 	databaseInstance *gorm.DB
 }
 
@@ -27,7 +29,7 @@ func (s *SqlWrapper[T]) init(name string) error {
 	// reading config
 	nameParts := strings.Split(s.name, "/")
 
-	if reflect.ValueOf(s.config).Type() == reflect.TypeOf(SqliteConfig{}) {
+	if reflect.ValueOf(s.config).Type() == reflect.TypeOf(Sqlite{}) {
 		filenameKey := fmt.Sprintf("%s.%s", nameParts[1], "db")
 		filenameStr, err := config.GetManager().Get(nameParts[0], filenameKey)
 		if err != nil {
@@ -45,11 +47,24 @@ func (s *SqlWrapper[T]) init(name string) error {
 			optionsMap[key] = item.(string)
 		}
 
-		s.config = reflect.ValueOf(SqliteConfig{
+		var internalConfig *Config
+
+		internalConfigKey := fmt.Sprintf("%s.%s", nameParts[1], "config")
+		internalConfigObj, err := config.GetManager().Get(nameParts[0], internalConfigKey)
+		if err == nil {
+			// first marshal
+			configData, err := json.Marshal(internalConfigObj)
+			if err == nil {
+				_ = json.Unmarshal(configData, &internalConfig)
+			}
+		}
+
+		s.config = reflect.ValueOf(Sqlite{
 			FileName: filenameStr.(string),
 			Options:  optionsMap,
+			Config:   internalConfig,
 		}).Interface().(T)
-	} else if reflect.ValueOf(s.config).Type() == reflect.TypeOf(MysqlConfig{}) {
+	} else if reflect.ValueOf(s.config).Type() == reflect.TypeOf(Mysql{}) {
 		dbNameKey := fmt.Sprintf("%s.%s", nameParts[1], "db")
 		dbNameStr, err := config.GetManager().Get(nameParts[0], dbNameKey)
 		if err != nil {
@@ -97,7 +112,19 @@ func (s *SqlWrapper[T]) init(name string) error {
 			optionsMap[key] = item.(string)
 		}
 
-		s.config = reflect.ValueOf(MysqlConfig{
+		var internalConfig *Config
+
+		internalConfigKey := fmt.Sprintf("%s.%s", nameParts[1], "config")
+		internalConfigObj, err := config.GetManager().Get(nameParts[0], internalConfigKey)
+		if err == nil {
+			// first marshal
+			configData, err := json.Marshal(internalConfigObj)
+			if err == nil {
+				_ = json.Unmarshal(configData, &internalConfig)
+			}
+		}
+
+		s.config = reflect.ValueOf(Mysql{
 			DatabaseName: dbNameStr.(string),
 			Username:     usernameStr.(string),
 			Password:     passwordStr.(string),
@@ -105,8 +132,9 @@ func (s *SqlWrapper[T]) init(name string) error {
 			Port:         portStr.(string),
 			Protocol:     protocolStr.(string),
 			Options:      optionsMap,
+			Config:       internalConfig,
 		}).Interface().(T)
-	} else if reflect.ValueOf(s.config).Type() == reflect.TypeOf(PostgresqlConfig{}) {
+	} else if reflect.ValueOf(s.config).Type() == reflect.TypeOf(Postgresql{}) {
 		dbNameKey := fmt.Sprintf("%s.%s", nameParts[1], "db")
 		dbNameStr, err := config.GetManager().Get(nameParts[0], dbNameKey)
 		if err != nil {
@@ -148,13 +176,26 @@ func (s *SqlWrapper[T]) init(name string) error {
 			optionsMap[key] = item.(string)
 		}
 
-		s.config = reflect.ValueOf(PostgresqlConfig{
+		var internalConfig *Config
+
+		internalConfigKey := fmt.Sprintf("%s.%s", nameParts[1], "config")
+		internalConfigObj, err := config.GetManager().Get(nameParts[0], internalConfigKey)
+		if err == nil {
+			// first marshal
+			configData, err := json.Marshal(internalConfigObj)
+			if err == nil {
+				_ = json.Unmarshal(configData, &internalConfig)
+			}
+		}
+
+		s.config = reflect.ValueOf(Postgresql{
 			DatabaseName: dbNameStr.(string),
 			Username:     usernameStr.(string),
 			Password:     passwordStr.(string),
 			Host:         hostStr.(string),
 			Port:         portStr.(string),
 			Options:      optionsMap,
+			Config:       internalConfig,
 		}).Interface().(T)
 	}
 
@@ -163,23 +204,34 @@ func (s *SqlWrapper[T]) init(name string) error {
 
 func (s *SqlWrapper[T]) GetDb() (*gorm.DB, error) {
 	if s.databaseInstance == nil {
-		if reflect.ValueOf(s.config).Type() == reflect.TypeOf(SqliteConfig{}) {
+		if reflect.ValueOf(s.config).Type() == reflect.TypeOf(Sqlite{}) {
 			optionsQSArr := make([]string, 0)
-			config := reflect.ValueOf(s.config).Interface().(SqliteConfig)
+			config := reflect.ValueOf(s.config).Interface().(Sqlite)
 			for key, val := range config.Options {
 				optionsQSArr = append(optionsQSArr, fmt.Sprintf("%s=%s", key, val))
 			}
 			optionsQS := strings.Join(optionsQSArr, "&")
 
 			dsn := fmt.Sprintf("file:%s?%s", config.FileName, optionsQS)
-			db, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{})
+			internalConfig := &gorm.Config{}
+			if config.Config != nil {
+				internalConfig.DisableAutomaticPing = config.Config.DisableAutomaticPing
+				internalConfig.DisableForeignKeyConstraintWhenMigrating = config.Config.DisableForeignKeyConstraintWhenMigrating
+				internalConfig.DisableNestedTransaction = config.Config.DisableNestedTransaction
+				internalConfig.DryRun = config.Config.DryRun
+				internalConfig.PrepareStmt = config.Config.PrepareStmt
+				internalConfig.SkipDefaultTransaction = config.Config.SkipDefaultTransaction
+				internalConfig.IgnoreRelationshipsWhenMigrating = config.Config.IgnoreRelationshipsWhenMigrating
+			}
+
+			db, err := gorm.Open(sqlite.Open(dsn), internalConfig)
 			if err != nil {
 				return nil, err
 			}
 			s.databaseInstance = db
-		} else if reflect.ValueOf(s.config).Type() == reflect.TypeOf(MysqlConfig{}) {
+		} else if reflect.ValueOf(s.config).Type() == reflect.TypeOf(Mysql{}) {
 			optionsQSArr := make([]string, 0)
-			config := reflect.ValueOf(s.config).Interface().(MysqlConfig)
+			config := reflect.ValueOf(s.config).Interface().(Mysql)
 			for key, val := range config.Options {
 				optionsQSArr = append(optionsQSArr, fmt.Sprintf("%s=%s", key, val))
 			}
@@ -188,14 +240,25 @@ func (s *SqlWrapper[T]) GetDb() (*gorm.DB, error) {
 			dsn := fmt.Sprintf("%s:%s@%s(%s:%s)/%s?%s", config.Username,
 				config.Password, config.Protocol, config.Host, config.Port,
 				config.DatabaseName, optionsQS)
-			db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
+			internalConfig := &gorm.Config{}
+			if config.Config != nil {
+				internalConfig.DisableAutomaticPing = config.Config.DisableAutomaticPing
+				internalConfig.DisableForeignKeyConstraintWhenMigrating = config.Config.DisableForeignKeyConstraintWhenMigrating
+				internalConfig.DisableNestedTransaction = config.Config.DisableNestedTransaction
+				internalConfig.DryRun = config.Config.DryRun
+				internalConfig.PrepareStmt = config.Config.PrepareStmt
+				internalConfig.SkipDefaultTransaction = config.Config.SkipDefaultTransaction
+				internalConfig.IgnoreRelationshipsWhenMigrating = config.Config.IgnoreRelationshipsWhenMigrating
+			}
+
+			db, err := gorm.Open(mysql.Open(dsn), internalConfig)
 			if err != nil {
 				return nil, err
 			}
 			s.databaseInstance = db
-		} else if reflect.ValueOf(s.config).Type() == reflect.TypeOf(PostgresqlConfig{}) {
+		} else if reflect.ValueOf(s.config).Type() == reflect.TypeOf(Postgresql{}) {
 			optionsQSArr := make([]string, 0)
-			config := reflect.ValueOf(s.config).Interface().(PostgresqlConfig)
+			config := reflect.ValueOf(s.config).Interface().(Postgresql)
 			for key, val := range config.Options {
 				optionsQSArr = append(optionsQSArr, fmt.Sprintf("%s=%s", key, val))
 			}
@@ -205,8 +268,18 @@ func (s *SqlWrapper[T]) GetDb() (*gorm.DB, error) {
 				config.Host, config.Username, config.Password, config.DatabaseName,
 				config.Port, optionsQS,
 			)
+			internalConfig := &gorm.Config{}
+			if config.Config != nil {
+				internalConfig.DisableAutomaticPing = config.Config.DisableAutomaticPing
+				internalConfig.DisableForeignKeyConstraintWhenMigrating = config.Config.DisableForeignKeyConstraintWhenMigrating
+				internalConfig.DisableNestedTransaction = config.Config.DisableNestedTransaction
+				internalConfig.DryRun = config.Config.DryRun
+				internalConfig.PrepareStmt = config.Config.PrepareStmt
+				internalConfig.SkipDefaultTransaction = config.Config.SkipDefaultTransaction
+				internalConfig.IgnoreRelationshipsWhenMigrating = config.Config.IgnoreRelationshipsWhenMigrating
+			}
 
-			db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+			db, err := gorm.Open(postgres.Open(dsn), internalConfig)
 			if err != nil {
 				return nil, err
 			}
