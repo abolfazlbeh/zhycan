@@ -36,6 +36,18 @@
       "charset": "utf8mb4",
       "parseTime": "True",
       "loc": "Local"
+    },
+    "specific_config": {
+      "default_string_size": 256,
+      "disable_datetime_precision": true,
+      "support_rename_index": true,
+      "support_rename_column": true,
+      "skip_initialize_with_version": false,
+      "disable_with_returning": false,
+      "support_for_share_clause": false,
+      "support_null_as_default_value": false,
+      "support_rename_column_unique": false,
+      "default_datetime_precision": 3
     }
   },
   "server3": {
@@ -48,6 +60,10 @@
     "options": {
       "sslmode": "disable",
       "TimeZone": "Asia/Shanghai"
+    },
+    "specific_config": {
+      "prefer_simple_protocol": true,
+      "without_returning": false
     }
   }
 }
