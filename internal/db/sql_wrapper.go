@@ -266,6 +266,9 @@ func (s *SqlWrapper[T]) init(name string) error {
 	return nil
 }
 
+// MARK: Public functions
+
+// GetDb - return associated internal Db
 func (s *SqlWrapper[T]) GetDb() (*gorm.DB, error) {
 	if s.databaseInstance == nil {
 		if reflect.ValueOf(s.config).Type() == reflect.TypeOf(Sqlite{}) {
@@ -398,7 +401,13 @@ func (s *SqlWrapper[T]) GetDb() (*gorm.DB, error) {
 	return s.databaseInstance, nil
 }
 
-// MARK: Public functions
+func (s *SqlWrapper[T]) Migrate(models ...interface{}) error {
+	err := s.databaseInstance.AutoMigrate(models...)
+	if err != nil {
+		return NewMigrateErr(err)
+	}
+	return nil
+}
 
 // NewSqlWrapper - create a new instance of SqlWrapper and return it
 func NewSqlWrapper[T SqlConfigurable](name string, dbType string) (*SqlWrapper[T], error) {
