@@ -60,3 +60,18 @@ func (err *NotExistServiceNameErr) Error() string {
 func NewNotExistServiceNameErr(serviceName string) error {
 	return &NotExistServiceNameErr{serviceName: serviceName}
 }
+
+// MigrateErr Error
+type MigrateErr struct {
+	Err error
+}
+
+// Error method - satisfying error interface
+func (err *MigrateErr) Error() string {
+	return fmt.Sprintf("Migrating tables got error: %v", err.Err)
+}
+
+// NewMigrateErr - return a new instance of MigrateErr
+func NewMigrateErr(err error) error {
+	return &MigrateErr{Err: err}
+}
