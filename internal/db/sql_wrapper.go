@@ -18,7 +18,6 @@ import (
 type SqlWrapper[T SqlConfigurable] struct {
 	name             string
 	config           T
-	internalConfig   Config
 	databaseInstance *gorm.DB
 }
 
@@ -59,10 +58,23 @@ func (s *SqlWrapper[T]) init(name string) error {
 			}
 		}
 
+		var internalLogger *LoggerConfig
+
+		internalLoggerKey := fmt.Sprintf("%s.%s", nameParts[1], "logger")
+		internalLoggerObj, err := config.GetManager().Get(nameParts[0], internalLoggerKey)
+		if err == nil {
+			// first marshal
+			configData, err := json.Marshal(internalLoggerObj)
+			if err == nil {
+				_ = json.Unmarshal(configData, &internalLogger)
+			}
+		}
+
 		s.config = reflect.ValueOf(Sqlite{
-			FileName: filenameStr.(string),
-			Options:  optionsMap,
-			Config:   internalConfig,
+			FileName:     filenameStr.(string),
+			Options:      optionsMap,
+			Config:       internalConfig,
+			LoggerConfig: internalLogger,
 		}).Interface().(T)
 	} else if reflect.ValueOf(s.config).Type() == reflect.TypeOf(Mysql{}) {
 		dbNameKey := fmt.Sprintf("%s.%s", nameParts[1], "db")
@@ -124,6 +136,18 @@ func (s *SqlWrapper[T]) init(name string) error {
 			}
 		}
 
+		var internalLogger *LoggerConfig
+
+		internalLoggerKey := fmt.Sprintf("%s.%s", nameParts[1], "logger")
+		internalLoggerObj, err := config.GetManager().Get(nameParts[0], internalLoggerKey)
+		if err == nil {
+			// first marshal
+			configData, err := json.Marshal(internalLoggerObj)
+			if err == nil {
+				_ = json.Unmarshal(configData, &internalLogger)
+			}
+		}
+
 		s.config = reflect.ValueOf(Mysql{
 			DatabaseName: dbNameStr.(string),
 			Username:     usernameStr.(string),
@@ -133,6 +157,7 @@ func (s *SqlWrapper[T]) init(name string) error {
 			Protocol:     protocolStr.(string),
 			Options:      optionsMap,
 			Config:       internalConfig,
+			LoggerConfig: internalLogger,
 		}).Interface().(T)
 	} else if reflect.ValueOf(s.config).Type() == reflect.TypeOf(Postgresql{}) {
 		dbNameKey := fmt.Sprintf("%s.%s", nameParts[1], "db")
@@ -188,6 +213,18 @@ func (s *SqlWrapper[T]) init(name string) error {
 			}
 		}
 
+		var internalLogger *LoggerConfig
+
+		internalLoggerKey := fmt.Sprintf("%s.%s", nameParts[1], "logger")
+		internalLoggerObj, err := config.GetManager().Get(nameParts[0], internalLoggerKey)
+		if err == nil {
+			// first marshal
+			configData, err := json.Marshal(internalLoggerObj)
+			if err == nil {
+				_ = json.Unmarshal(configData, &internalLogger)
+			}
+		}
+
 		s.config = reflect.ValueOf(Postgresql{
 			DatabaseName: dbNameStr.(string),
 			Username:     usernameStr.(string),
@@ -196,6 +233,7 @@ func (s *SqlWrapper[T]) init(name string) error {
 			Port:         portStr.(string),
 			Options:      optionsMap,
 			Config:       internalConfig,
+			LoggerConfig: internalLogger,
 		}).Interface().(T)
 	}
 
@@ -222,6 +260,10 @@ func (s *SqlWrapper[T]) GetDb() (*gorm.DB, error) {
 				internalConfig.PrepareStmt = config.Config.PrepareStmt
 				internalConfig.SkipDefaultTransaction = config.Config.SkipDefaultTransaction
 				internalConfig.IgnoreRelationshipsWhenMigrating = config.Config.IgnoreRelationshipsWhenMigrating
+			}
+
+			if config.LoggerConfig != nil {
+				internalConfig.Logger = NewDbLogger(*config.LoggerConfig)
 			}
 
 			db, err := gorm.Open(sqlite.Open(dsn), internalConfig)
@@ -251,11 +293,16 @@ func (s *SqlWrapper[T]) GetDb() (*gorm.DB, error) {
 				internalConfig.IgnoreRelationshipsWhenMigrating = config.Config.IgnoreRelationshipsWhenMigrating
 			}
 
+			if config.LoggerConfig != nil {
+				internalConfig.Logger = NewDbLogger(*config.LoggerConfig)
+			}
+
 			db, err := gorm.Open(mysql.Open(dsn), internalConfig)
 			if err != nil {
 				return nil, err
 			}
 			s.databaseInstance = db
+
 		} else if reflect.ValueOf(s.config).Type() == reflect.TypeOf(Postgresql{}) {
 			optionsQSArr := make([]string, 0)
 			config := reflect.ValueOf(s.config).Interface().(Postgresql)
@@ -279,12 +326,15 @@ func (s *SqlWrapper[T]) GetDb() (*gorm.DB, error) {
 				internalConfig.IgnoreRelationshipsWhenMigrating = config.Config.IgnoreRelationshipsWhenMigrating
 			}
 
+			if config.LoggerConfig != nil {
+				internalConfig.Logger = NewDbLogger(*config.LoggerConfig)
+			}
+
 			db, err := gorm.Open(postgres.Open(dsn), internalConfig)
 			if err != nil {
 				return nil, err
 			}
 			s.databaseInstance = db
-
 		}
 	}
 	return s.databaseInstance, nil

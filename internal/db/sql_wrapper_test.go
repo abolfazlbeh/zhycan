@@ -48,6 +48,29 @@ func TestSqlWrapper_SqliteConnection(t *testing.T) {
 	}
 }
 
+func TestSqlWrapper_AddLoggerAndTest(t *testing.T) {
+	makeReadyConfigManager()
+
+	newWrapper, err := NewSqlWrapper[Sqlite]("db/server1", "sqlite")
+	if err != nil {
+		t.Errorf("Creating Sql Wrapper --> Expected: %v, but got %v", nil, err)
+		return
+	}
+
+	db2, err := newWrapper.GetDb()
+	if err != nil {
+		t.Errorf("Get database instance --> Expected: %v, but got %v", nil, err)
+		return
+	}
+
+	tx := db2.Exec("SELECT 1")
+	if tx.Error != nil {
+		t.Errorf("Query on connected database --> Expected no Error: %v, but got %v", nil, err)
+		return
+	}
+
+}
+
 func TestSqlWrapper_SqliteConnectionConfiguration(t *testing.T) {
 
 	//db, err := gorm.Open(sqlite.Open("gorm.db"), &gorm.Config{

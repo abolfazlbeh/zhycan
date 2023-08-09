@@ -11,9 +11,10 @@ type Config struct {
 }
 
 type Sqlite struct {
-	FileName string            `json:"db"`
-	Options  map[string]string `json:"options"`
-	Config   *Config           `json:"config"`
+	FileName     string            `json:"db"`
+	Options      map[string]string `json:"options"`
+	Config       *Config           `json:"config"`
+	LoggerConfig *LoggerConfig     `json:"logger"`
 }
 
 type Mysql struct {
@@ -25,6 +26,7 @@ type Mysql struct {
 	Protocol     string            `json:"protocol"`
 	Options      map[string]string `json:"options"`
 	Config       *Config           `json:"config"`
+	LoggerConfig *LoggerConfig     `json:"logger"`
 }
 
 type Postgresql struct {
@@ -35,8 +37,16 @@ type Postgresql struct {
 	Port         string            `json:"port"`
 	Options      map[string]string `json:"options"`
 	Config       *Config           `json:"config"`
+	LoggerConfig *LoggerConfig     `json:"logger"`
 }
 
 type SqlConfigurable interface {
 	Sqlite | Mysql | Postgresql
+}
+
+type LoggerConfig struct {
+	SlowThreshold             int64  `json:"slow_threshold"`
+	IgnoreRecordNotFoundError bool   `json:"ignore_record_not_found_error"`
+	ParameterizedQueries      bool   `json:"parameterized_queries"`
+	LogLevel                  string `json:"log_level"`
 }
