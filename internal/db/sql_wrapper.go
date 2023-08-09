@@ -148,16 +148,29 @@ func (s *SqlWrapper[T]) init(name string) error {
 			}
 		}
 
+		var specificConfig *MysqlSpecificConfig
+
+		specificConfigKey := fmt.Sprintf("%s.%s", nameParts[1], "specific_config")
+		specificConfigObj, err := config.GetManager().Get(nameParts[0], specificConfigKey)
+		if err == nil {
+			// first marshal
+			configData, err := json.Marshal(specificConfigObj)
+			if err == nil {
+				_ = json.Unmarshal(configData, &specificConfig)
+			}
+		}
+
 		s.config = reflect.ValueOf(Mysql{
-			DatabaseName: dbNameStr.(string),
-			Username:     usernameStr.(string),
-			Password:     passwordStr.(string),
-			Host:         hostStr.(string),
-			Port:         portStr.(string),
-			Protocol:     protocolStr.(string),
-			Options:      optionsMap,
-			Config:       internalConfig,
-			LoggerConfig: internalLogger,
+			DatabaseName:   dbNameStr.(string),
+			Username:       usernameStr.(string),
+			Password:       passwordStr.(string),
+			Host:           hostStr.(string),
+			Port:           portStr.(string),
+			Protocol:       protocolStr.(string),
+			Options:        optionsMap,
+			Config:         internalConfig,
+			LoggerConfig:   internalLogger,
+			SpecificConfig: specificConfig,
 		}).Interface().(T)
 	} else if reflect.ValueOf(s.config).Type() == reflect.TypeOf(Postgresql{}) {
 		dbNameKey := fmt.Sprintf("%s.%s", nameParts[1], "db")
@@ -225,15 +238,28 @@ func (s *SqlWrapper[T]) init(name string) error {
 			}
 		}
 
+		var specificConfig *PostgresqlSpecificConfig
+
+		specificConfigKey := fmt.Sprintf("%s.%s", nameParts[1], "specific_config")
+		specificConfigObj, err := config.GetManager().Get(nameParts[0], specificConfigKey)
+		if err == nil {
+			// first marshal
+			configData, err := json.Marshal(specificConfigObj)
+			if err == nil {
+				_ = json.Unmarshal(configData, &specificConfig)
+			}
+		}
+
 		s.config = reflect.ValueOf(Postgresql{
-			DatabaseName: dbNameStr.(string),
-			Username:     usernameStr.(string),
-			Password:     passwordStr.(string),
-			Host:         hostStr.(string),
-			Port:         portStr.(string),
-			Options:      optionsMap,
-			Config:       internalConfig,
-			LoggerConfig: internalLogger,
+			DatabaseName:   dbNameStr.(string),
+			Username:       usernameStr.(string),
+			Password:       passwordStr.(string),
+			Host:           hostStr.(string),
+			Port:           portStr.(string),
+			Options:        optionsMap,
+			Config:         internalConfig,
+			LoggerConfig:   internalLogger,
+			SpecificConfig: specificConfig,
 		}).Interface().(T)
 	}
 
@@ -297,11 +323,31 @@ func (s *SqlWrapper[T]) GetDb() (*gorm.DB, error) {
 				internalConfig.Logger = NewDbLogger(*config.LoggerConfig)
 			}
 
-			db, err := gorm.Open(mysql.Open(dsn), internalConfig)
-			if err != nil {
-				return nil, err
+			if config.SpecificConfig == nil {
+				db, err := gorm.Open(mysql.Open(dsn), internalConfig)
+				if err != nil {
+					return nil, err
+				}
+				s.databaseInstance = db
+			} else {
+				db, err := gorm.Open(mysql.New(mysql.Config{
+					DSN:                           dsn,
+					SkipInitializeWithVersion:     config.SpecificConfig.SkipInitializeWithVersion,
+					DefaultStringSize:             config.SpecificConfig.DefaultStringSize,
+					DefaultDatetimePrecision:      &config.SpecificConfig.DefaultDatetimePrecision,
+					DisableWithReturning:          config.SpecificConfig.DisableWithReturning,
+					DisableDatetimePrecision:      config.SpecificConfig.DisableDatetimePrecision,
+					DontSupportRenameIndex:        !config.SpecificConfig.SupportRenameIndex,
+					DontSupportRenameColumn:       !config.SpecificConfig.SupportRenameColumn,
+					DontSupportForShareClause:     !config.SpecificConfig.SupportForShareClause,
+					DontSupportNullAsDefaultValue: !config.SpecificConfig.SupportNullAsDefaultValue,
+					DontSupportRenameColumnUnique: !config.SpecificConfig.SupportRenameColumnUnique,
+				}), internalConfig)
+				if err != nil {
+					return nil, err
+				}
+				s.databaseInstance = db
 			}
-			s.databaseInstance = db
 
 		} else if reflect.ValueOf(s.config).Type() == reflect.TypeOf(Postgresql{}) {
 			optionsQSArr := make([]string, 0)
@@ -330,11 +376,23 @@ func (s *SqlWrapper[T]) GetDb() (*gorm.DB, error) {
 				internalConfig.Logger = NewDbLogger(*config.LoggerConfig)
 			}
 
-			db, err := gorm.Open(postgres.Open(dsn), internalConfig)
-			if err != nil {
-				return nil, err
+			if config.SpecificConfig == nil {
+				db, err := gorm.Open(postgres.Open(dsn), internalConfig)
+				if err != nil {
+					return nil, err
+				}
+				s.databaseInstance = db
+			} else {
+				db, err := gorm.Open(postgres.New(postgres.Config{
+					DSN:                  dsn,
+					PreferSimpleProtocol: config.SpecificConfig.PreferSimpleProtocol,
+					WithoutReturning:     config.SpecificConfig.WithoutReturning,
+				}), internalConfig)
+				if err != nil {
+					return nil, err
+				}
+				s.databaseInstance = db
 			}
-			s.databaseInstance = db
 		}
 	}
 	return s.databaseInstance, nil

@@ -10,6 +10,31 @@ type Config struct {
 	DisableNestedTransaction                 bool `json:"disable_nested_transaction"`
 }
 
+type LoggerConfig struct {
+	SlowThreshold             int64  `json:"slow_threshold"`
+	IgnoreRecordNotFoundError bool   `json:"ignore_record_not_found_error"`
+	ParameterizedQueries      bool   `json:"parameterized_queries"`
+	LogLevel                  string `json:"log_level"`
+}
+
+type MysqlSpecificConfig struct {
+	DefaultStringSize         uint `json:"default_string_size"`
+	DisableDatetimePrecision  bool `json:"disable_datetime_precision"`
+	DefaultDatetimePrecision  int  `json:"default_datetime_precision"`
+	SupportRenameIndex        bool `json:"support_rename_index"`
+	SupportRenameColumn       bool `json:"support_rename_column"`
+	SkipInitializeWithVersion bool `json:"skip_initialize_with_version"`
+	DisableWithReturning      bool `json:"disable_with_returning"`
+	SupportForShareClause     bool `json:"support_for_share_clause"`
+	SupportNullAsDefaultValue bool `json:"support_null_as_default_value"`
+	SupportRenameColumnUnique bool `json:"support_rename_column_unique"`
+}
+
+type PostgresqlSpecificConfig struct {
+	PreferSimpleProtocol bool `json:"prefer_simple_protocol"`
+	WithoutReturning     bool `json:"without_returning"`
+}
+
 type Sqlite struct {
 	FileName     string            `json:"db"`
 	Options      map[string]string `json:"options"`
@@ -18,35 +43,30 @@ type Sqlite struct {
 }
 
 type Mysql struct {
-	DatabaseName string            `json:"db"`
-	Username     string            `json:"username"`
-	Password     string            `json:"password"`
-	Host         string            `json:"host"`
-	Port         string            `json:"port"`
-	Protocol     string            `json:"protocol"`
-	Options      map[string]string `json:"options"`
-	Config       *Config           `json:"config"`
-	LoggerConfig *LoggerConfig     `json:"logger"`
+	DatabaseName   string               `json:"db"`
+	Username       string               `json:"username"`
+	Password       string               `json:"password"`
+	Host           string               `json:"host"`
+	Port           string               `json:"port"`
+	Protocol       string               `json:"protocol"`
+	Options        map[string]string    `json:"options"`
+	Config         *Config              `json:"config"`
+	LoggerConfig   *LoggerConfig        `json:"logger"`
+	SpecificConfig *MysqlSpecificConfig `json:"specific_config"`
 }
 
 type Postgresql struct {
-	DatabaseName string            `json:"db"`
-	Username     string            `json:"username"`
-	Password     string            `json:"password"`
-	Host         string            `json:"host"`
-	Port         string            `json:"port"`
-	Options      map[string]string `json:"options"`
-	Config       *Config           `json:"config"`
-	LoggerConfig *LoggerConfig     `json:"logger"`
+	DatabaseName   string                    `json:"db"`
+	Username       string                    `json:"username"`
+	Password       string                    `json:"password"`
+	Host           string                    `json:"host"`
+	Port           string                    `json:"port"`
+	Options        map[string]string         `json:"options"`
+	Config         *Config                   `json:"config"`
+	LoggerConfig   *LoggerConfig             `json:"logger"`
+	SpecificConfig *PostgresqlSpecificConfig `json:"specific_config"`
 }
 
 type SqlConfigurable interface {
 	Sqlite | Mysql | Postgresql
-}
-
-type LoggerConfig struct {
-	SlowThreshold             int64  `json:"slow_threshold"`
-	IgnoreRecordNotFoundError bool   `json:"ignore_record_not_found_error"`
-	ParameterizedQueries      bool   `json:"parameterized_queries"`
-	LogLevel                  string `json:"log_level"`
 }
