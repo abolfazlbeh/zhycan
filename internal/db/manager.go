@@ -142,3 +142,16 @@ func (m *manager) GetDb(instanceName string) (*gorm.DB, error) {
 
 	return nil, NewNotExistServiceNameErr(instanceName)
 }
+
+// Migrate - migrate models on specific database
+func (m *manager) Migrate(instanceName string, models ...interface{}) error {
+	if v, ok := m.sqliteDbInstances[instanceName]; ok {
+		return v.Migrate(models)
+	} else if v, ok := m.mysqlDbInstances[instanceName]; ok {
+		return v.Migrate(models)
+	} else if v, ok := m.postgresDbInstances[instanceName]; ok {
+		return v.Migrate(models)
+	}
+
+	return NewNotExistServiceNameErr(instanceName)
+}
