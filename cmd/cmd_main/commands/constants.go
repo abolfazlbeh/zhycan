@@ -20,6 +20,8 @@ const (
 	SubDirectoryIsCreated     = `Zhycan > Sub directory "%s" is created ...`
 	AppControllerIsNotCreated = `Zhycan > App "controller.go" cannot be created ... %v`
 	AppControllerIsCreated    = `Zhycan > App "controller.go" is created ...`
+	AppModelIsNotCreated      = `Zhycan > App "model.go" cannot be created ... %v`
+	AppModelIsCreated         = `Zhycan > App "model.go" is created ...`
 	AppEngineIsNotCreated     = `Zhycan > App "app.go" cannot be created ... %v`
 	AppEngineIsCreated        = `Zhycan > App "app.go" is created ...`
 
@@ -395,6 +397,65 @@ func (app *App) Init() {
         logger.Log(logger.NewLogObject(
             logger.ERROR, "App.Init", logger.FuncMaintenanceType, time.Now().UTC(), "Cannot Register Restful Controller", err))
     }
+}
+`
+
+	appModelTmpl = `/*
+Create By Zhycan Framework
+
+Copyright © {{.Year}}
+Project: {{.ProjectName}}
+File: "app/model.go" --> {{ .Time.Format .TimeFormat }} by {{.CreatorUserName}}
+------------------------------
+*/
+
+package app
+
+import (
+    "github.com/gofiber/fiber/v2"
+    "github.com/abolfazlbeh/zhycan/pkg/db"
+)
+
+// MARK: Models
+
+// User - a sample model to show the functionality
+type User struct {
+    gorm.Model
+    Name string
+}
+
+// CreateNewUser - create a new user record in database
+func CreateNewUser(name string) (*User, int64, error) {
+    u := User{Name: "test"}
+
+    database, err := db.GetDb("default")
+    if err != nil {
+        return nil, 0, errors.New("UserCreateError")
+    }
+
+    result := database.Create(&u)
+    if result.Error != nil {
+        return nil, 0, result.Error
+    }
+
+    return &u, result.RowsAffected, nil
+}
+
+// GetAllUsers - get all user records from database
+func GetAllUsers() (*[]User, int64, error) {
+    database, err := db.GetDb("default")
+    if err != nil {
+        return nil, errors.New("UserCreateError")
+    }
+
+    var users []User
+
+    result := db2.Find(&users)
+    if result.Error != nil {
+        return nil, 0, result.Error
+    }
+
+    return &users, result.RowsAffected, nil
 }
 `
 )

@@ -189,6 +189,11 @@ func createAppDirFiles(cmd *cobra.Command, expectedProjectPath string, projectNa
 		return err
 	}
 
+	err = createAppModel(cmd, expectedProjectPath, projectName, username, year)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -263,6 +268,44 @@ func createAppController(cmd *cobra.Command, expectedProjectPath string, project
 	} else {
 		fmt.Fprintln(cmd.OutOrStdout())
 		fmt.Fprintf(cmd.OutOrStdout(), AppControllerIsCreated)
+	}
+
+	return nil
+}
+
+func createAppModel(cmd *cobra.Command, expectedProjectPath string, projectName string, username string, year int) error {
+	mainGoPath := filepath.Join(expectedProjectPath, "app", "model.go")
+	file, err := os.Create(mainGoPath)
+	if err != nil {
+		fmt.Fprintln(cmd.OutOrStdout())
+		fmt.Fprintf(cmd.OutOrStdout(), AppModelIsNotCreated, err)
+		return err
+	}
+	defer file.Close()
+
+	temp := template.Must(template.New("").Parse(appModelTmpl))
+	//temp := template.Must(template.ParseFiles("./templates/app.model.gotmpl"))
+	goModuleVars := struct {
+		ProjectName     string
+		CreatorUserName string
+		Time            time.Time
+		TimeFormat      string
+		Year            int
+	}{
+		ProjectName:     projectName,
+		CreatorUserName: username,
+		Time:            time.Now().Local(),
+		TimeFormat:      time.RFC822,
+		Year:            year,
+	}
+	err = temp.Execute(file, goModuleVars)
+	if err != nil {
+		fmt.Fprintln(cmd.OutOrStdout())
+		fmt.Fprintf(cmd.OutOrStdout(), AppModelIsNotCreated, err)
+		return err
+	} else {
+		fmt.Fprintln(cmd.OutOrStdout())
+		fmt.Fprintf(cmd.OutOrStdout(), AppModelIsCreated)
 	}
 
 	return nil
