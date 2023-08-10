@@ -155,3 +155,16 @@ func (m *manager) Migrate(instanceName string, models ...interface{}) error {
 
 	return NewNotExistServiceNameErr(instanceName)
 }
+
+// AttachMigrationFunc -  attach migration function to be called by end user
+func (m *manager) AttachMigrationFunc(instanceName string, f func(migrator gorm.Migrator) error) error {
+	if v, ok := m.sqliteDbInstances[instanceName]; ok {
+		return v.AttachMigrationFunc(f)
+	} else if v, ok := m.mysqlDbInstances[instanceName]; ok {
+		return v.AttachMigrationFunc(f)
+	} else if v, ok := m.postgresDbInstances[instanceName]; ok {
+		return v.AttachMigrationFunc(f)
+	}
+
+	return NewNotExistServiceNameErr(instanceName)
+}

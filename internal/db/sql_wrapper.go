@@ -410,6 +410,15 @@ func (s *SqlWrapper[T]) Migrate(models ...interface{}) error {
 	return nil
 }
 
+// AttachMigrationFunc -  attach migration function to be called by end user
+func (s *SqlWrapper[T]) AttachMigrationFunc(f func(migrator gorm.Migrator) error) error {
+	err := f(s.databaseInstance.Migrator())
+	if err != nil {
+		return NewMigrateErr(err)
+	}
+	return nil
+}
+
 // NewSqlWrapper - create a new instance of SqlWrapper and return it
 func NewSqlWrapper[T SqlConfigurable](name string, dbType string) (*SqlWrapper[T], error) {
 	if strings.ToLower(dbType) == "sqlite" ||

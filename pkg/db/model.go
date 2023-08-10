@@ -14,3 +14,8 @@ func GetDb(instanceName string) (*gorm.DB, error) {
 func Migrate(instanceName string, models ...interface{}) error {
 	return db.GetManager().Migrate(instanceName, models)
 }
+
+// AttachMigrationFunc -  attach migration function to be called by end user
+func AttachMigrationFunc(instanceName string, f func(migrator gorm.Migrator) error) error {
+	return db.GetManager().AttachMigrationFunc(instanceName, f)
+}
