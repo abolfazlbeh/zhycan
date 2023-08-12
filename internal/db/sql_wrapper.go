@@ -19,6 +19,8 @@ type SqlWrapper[T SqlConfigurable] struct {
 	name             string
 	config           T
 	databaseInstance *gorm.DB
+
+	models []interface{}
 }
 
 // init - SqlWrapper Constructor - It initializes the wrapper
@@ -417,6 +419,11 @@ func (s *SqlWrapper[T]) AttachMigrationFunc(f func(migrator gorm.Migrator) error
 		return NewMigrateErr(err)
 	}
 	return nil
+}
+
+// RegisterModels - register model to be migrated by migrate command
+func (s *SqlWrapper[T]) RegisterModels(models ...interface{}) {
+	s.models = append(s.models, models...)
 }
 
 // NewSqlWrapper - create a new instance of SqlWrapper and return it

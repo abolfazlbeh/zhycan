@@ -156,6 +156,22 @@ func (m *manager) Migrate(instanceName string, models ...interface{}) error {
 	return NewNotExistServiceNameErr(instanceName)
 }
 
+// RegisterModels - register model on specific database to be migrated by migrate command
+func (m *manager) RegisterModels(instanceName string, models ...interface{}) error {
+	if v, ok := m.sqliteDbInstances[instanceName]; ok {
+		v.RegisterModels(models)
+		return nil
+	} else if v, ok := m.mysqlDbInstances[instanceName]; ok {
+		v.RegisterModels(models)
+		return nil
+	} else if v, ok := m.postgresDbInstances[instanceName]; ok {
+		v.RegisterModels(models)
+		return nil
+	}
+
+	return NewNotExistServiceNameErr(instanceName)
+}
+
 // AttachMigrationFunc -  attach migration function to be called by end user
 func (m *manager) AttachMigrationFunc(instanceName string, f func(migrator gorm.Migrator) error) error {
 	if v, ok := m.sqliteDbInstances[instanceName]; ok {

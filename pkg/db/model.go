@@ -19,3 +19,8 @@ func Migrate(instanceName string, models ...interface{}) error {
 func AttachMigrationFunc(instanceName string, f func(migrator gorm.Migrator) error) error {
 	return db.GetManager().AttachMigrationFunc(instanceName, f)
 }
+
+// RegisterModels - register model on specific database to be migrated by migrate command
+func RegisterModels(instanceName string, models ...interface{}) error {
+	return db.GetManager().RegisterModels(instanceName, models)
+}
