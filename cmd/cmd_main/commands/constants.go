@@ -20,6 +20,8 @@ const (
 	SubDirectoryIsCreated     = `Zhycan > Sub directory "%s" is created ...`
 	AppControllerIsNotCreated = `Zhycan > App "controller.go" cannot be created ... %v`
 	AppControllerIsCreated    = `Zhycan > App "controller.go" is created ...`
+	AppModelIsNotCreated      = `Zhycan > App "model.go" cannot be created ... %v`
+	AppModelIsCreated         = `Zhycan > App "model.go" is created ...`
 	AppEngineIsNotCreated     = `Zhycan > App "app.go" cannot be created ... %v`
 	AppEngineIsCreated        = `Zhycan > App "app.go" is created ...`
 
@@ -85,11 +87,9 @@ func main() {
         return
     }
 
-
     // Testing the logger module works properly
     logger.Log(logger.NewLogObject(
-        logger.INFO, "Logger Module Works Like A Charm ...", logger.FuncMaintenanceType, time.Now().UTC(), "", nil))
-
+        logger.INFO, "main.go", logger.FuncMaintenanceType, time.Now().UTC(), "Logger Module Works Like A Charm ...", nil))
 
     // Execute the provided command
     commands.Execute()
@@ -108,6 +108,7 @@ package commands
 
 import (
 	"github.com/spf13/cobra"
+	"github.com/abolfazlbeh/zhycan/pkg/command"
 	"os"
 )
 
@@ -143,6 +144,9 @@ func init() {
 	// when this action is called directly.
 
 	//rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+
+    // Attach Default Zhycan Cli Commands
+    command.AttachCommands(rootCmd)
 
 	// MARK:Commands --- And New Commands Below ---
 	// rootCmd.AddCommand(NewInitCmd())
@@ -273,13 +277,12 @@ DerivedData/
   "config_remote_infra": "grpc",
   "config_remote_duration": 300,
   "modules": [
-    {"name":"logger", "type": "local"},
-    {"name":"server", "type": "remote"}
+    {"name":"logger", "type": "local"}
   ]
 }`
 	loggerConfigTmpl = `{
   "type": "zap",
-  "output": ["console", "file"],
+  "outputs": ["console", "file"],
   "channel_size": 1000,
   "options": ["caller", "stackTrace"],
   "console": {
@@ -343,7 +346,8 @@ File: "app/controller.go" --> {{ .Time.Format .TimeFormat }} by {{.CreatorUserNa
 package app
 
 import (
-	"github.com/gofiber/fiber/v2"
+    "github.com/gofiber/fiber/v2"
+    "github.com/abolfazlbeh/zhycan/pkg/http"
 )
 
 // MARK: Controller
@@ -351,6 +355,17 @@ import (
 // SampleController - a sample controller to show the functionality
 type SampleController struct {}
 
+// Routes - returning controller specific routes to be registered
+func (ctrl *SampleController) Routes() []http.HttpRoute {
+    return []http.HttpRoute {
+        http.HttpRoute {
+            Method:     http.MethodGet,
+            Path:       "/hello",
+            RouteName:  "hello",
+            F:          &ctrl.GetHello,
+        },
+    }
+}
 
 // GetHello - just return the 'Hello World' string to user
 func (ctrl *SampleController) GetHello(c *fiber.Ctx) error {
@@ -375,6 +390,72 @@ package app
 // App - application engine structure that must satisfy one of the engine interface such as 'engine.RestfulApp', ...
 type App struct {}
 
-// Other parts such as Routes function and ... can be implemented in other files
+// Init - initialize the app
+func (app *App) Init() {
+    err := engine.RegisterRestfulController(&SampleController{Name: "sample"})
+    if err != nil {
+        logger.Log(logger.NewLogObject(
+            logger.ERROR, "App.Init", logger.FuncMaintenanceType, time.Now().UTC(), "Cannot Register Restful Controller", err))
+    }
+}
+`
+
+	appModelTmpl = `/*
+Create By Zhycan Framework
+
+Copyright © {{.Year}}
+Project: {{.ProjectName}}
+File: "app/model.go" --> {{ .Time.Format .TimeFormat }} by {{.CreatorUserName}}
+------------------------------
+*/
+
+package app
+
+import (
+    "github.com/gofiber/fiber/v2"
+    "github.com/abolfazlbeh/zhycan/pkg/db"
+)
+
+// MARK: Models
+
+// User - a sample model to show the functionality
+type User struct {
+    gorm.Model
+    Name string
+}
+
+// CreateNewUser - create a new user record in database
+func CreateNewUser(name string) (*User, int64, error) {
+    u := User{Name: "test"}
+
+    database, err := db.GetDb("default")
+    if err != nil {
+        return nil, 0, errors.New("UserCreateError")
+    }
+
+    result := database.Create(&u)
+    if result.Error != nil {
+        return nil, 0, result.Error
+    }
+
+    return &u, result.RowsAffected, nil
+}
+
+// GetAllUsers - get all user records from database
+func GetAllUsers() (*[]User, int64, error) {
+    database, err := db.GetDb("default")
+    if err != nil {
+        return nil, errors.New("UserCreateError")
+    }
+
+    var users []User
+
+    result := db2.Find(&users)
+    if result.Error != nil {
+        return nil, 0, result.Error
+    }
+
+    return &users, result.RowsAffected, nil
+}
 `
 )

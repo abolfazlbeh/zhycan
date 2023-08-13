@@ -7,6 +7,7 @@
   "modules": [
     {"name":"watcher", "type": "local"},
     {"name":"logger", "type": "local"},
+    {"name":"db", "type": "local"},
     {"name":"server", "type": "remote"},
     {"name":"http", "type": "local"}
   ]

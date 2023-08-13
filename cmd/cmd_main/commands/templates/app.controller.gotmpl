@@ -9,11 +9,27 @@ File: `app/controller.go` --> {{ .Time.Format .TimeFormat }} by {{.CreatorUserNa
 
 package app
 
+import (
+    "github.com/gofiber/fiber/v2"
+    "github.com/abolfazlbeh/zhycan/pkg/http"
+)
+
 // MARK: Controller
 
 // SampleController - a sample controller to show the functionality
 type SampleController struct {}
 
+// Routes - returning controller specific routes to be registered
+func (ctrl *SampleController) Routes() []http.HttpRoute {
+    return []http.HttpRoute {
+        http.HttpRoute {
+            Method:     http.MethodGet,
+            Path:       "/hello",
+            RouteName:  "hello",
+            F:          &ctrl.GetHello,
+        },
+    }
+}
 
 // GetHello - just return the 'Hello World' string to user
 func (ctrl *SampleController) GetHello(c *fiber.Ctx) error {

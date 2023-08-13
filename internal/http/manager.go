@@ -13,10 +13,11 @@ import (
 
 // manager object
 type manager struct {
-	name          string
-	lock          sync.Mutex
-	servers       map[string]*Server
-	defaultServer string
+	name             string
+	lock             sync.Mutex
+	servers          map[string]*Server
+	defaultServer    string
+	isServersStarted bool
 }
 
 // MARK: Module variables
@@ -70,20 +71,21 @@ func (m *manager) init() {
 			m.defaultServer = serverNames[0]
 		}
 	}
+
+	m.isServersStarted = false
 }
 
 // restartOnChangeConfig - subscribe a function for when the config is changed
 func (m *manager) restartOnChangeConfig() {
-	m.lock.Lock()
-	defer m.lock.Unlock()
-
 	// Config config server to reload
 	wrapper, err := config.GetManager().GetConfigWrapper(m.name)
 	if err == nil {
 		wrapper.RegisterChangeCallback(func() interface{} {
-			m.StopServers()
-			m.init()
-			m.StartServers()
+			if m.isServersStarted {
+				m.StopServers()
+				m.init()
+				m.StartServers()
+			}
 			return nil
 		})
 	} else {
@@ -106,20 +108,38 @@ func GetManager() *manager {
 
 // StartServers - iterate over all servers and start them
 func (m *manager) StartServers() error {
-	for _, item := range m.servers {
-		go func(s *Server) {
-			err := s.Start()
-			if err != nil {
-				// TODO: print some error
-			}
-		}(item)
+	m.lock.Lock()
+	defer m.lock.Unlock()
+
+	if !m.isServersStarted {
+		for _, item := range m.servers {
+			go func(s *Server) {
+				err := s.Start()
+				if err != nil {
+					// TODO: print some error
+				}
+			}(item)
+		}
 	}
 	return nil
 }
 
 // StopServers - iterate over all severs and stop them
 func (m *manager) StopServers() error {
-	return NewNotImplementedErr()
+	m.lock.Lock()
+	defer m.lock.Unlock()
+
+	if m.isServersStarted {
+		for _, item := range m.servers {
+			go func(s *Server) {
+				err := s.Stop()
+				if err != nil {
+					// TODO: print some error
+				}
+			}(item)
+		}
+	}
+	return nil
 }
 
 // AddRoute - add a route to the server with specified name
@@ -157,15 +177,33 @@ func (m *manager) GetRouteByName(routeName string, serverName ...string) (*fiber
 
 // AddGroup - add a group to the server with specified name
 func (m *manager) AddGroup(groupName string, f func(c *fiber.Ctx) error, groupsName []string, serverName ...string) error {
-	if len(serverName) > 0 {
-		for _, sn := range serverName {
-			if s, ok := m.servers[sn]; ok {
-				return s.AddGroup(groupName, f, groupsName...)
+	if serverName != nil {
+		if len(serverName) > 0 {
+			for _, sn := range serverName {
+				if s, ok := m.servers[sn]; ok {
+					if groupsName != nil {
+						return s.AddGroup(groupName, f, groupsName...)
+					} else {
+						return s.AddGroup(groupName, f, []string{}...)
+					}
+				}
+			}
+		} else {
+			if m.defaultServer != "" {
+				if groupsName != nil {
+					return m.servers[m.defaultServer].AddGroup(groupName, f, groupsName...)
+				} else {
+					return m.servers[m.defaultServer].AddGroup(groupName, f, []string{}...)
+				}
 			}
 		}
 	} else {
 		if m.defaultServer != "" {
-			return m.servers[m.defaultServer].AddGroup(groupName, f, groupsName...)
+			if groupsName != nil {
+				return m.servers[m.defaultServer].AddGroup(groupName, f, groupsName...)
+			} else {
+				return m.servers[m.defaultServer].AddGroup(groupName, f, []string{}...)
+			}
 		}
 	}
 	return NewAddGroupToNilServerErr(groupName)
