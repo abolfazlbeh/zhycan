@@ -419,7 +419,7 @@ func (s *SqlWrapper[T]) AttachMigrationFunc(f func(migrator gorm.Migrator) error
 	return nil
 }
 
-// NewSqlWrapper - create a new instance of SqlWrapper and return it
+// NewSqlWrapper - create a new instance of SqlWrapper and returns it
 func NewSqlWrapper[T SqlConfigurable](name string, dbType string) (*SqlWrapper[T], error) {
 	if strings.ToLower(dbType) == "sqlite" ||
 		strings.ToLower(dbType) == "mysql" ||

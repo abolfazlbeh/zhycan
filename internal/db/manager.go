@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/abolfazlbeh/zhycan/internal/config"
 	"github.com/abolfazlbeh/zhycan/internal/utils"
+	"go.mongodb.org/mongo-driver/mongo"
 	"gorm.io/gorm"
 	"log"
 	"reflect"
@@ -20,6 +21,7 @@ type manager struct {
 	sqliteDbInstances   map[string]*SqlWrapper[Sqlite]
 	mysqlDbInstances    map[string]*SqlWrapper[Mysql]
 	postgresDbInstances map[string]*SqlWrapper[Postgresql]
+	mongoDbInstances    map[string]*MongoWrapper
 	supportedDBs        []string
 
 	isManagerInitialized bool
@@ -42,7 +44,7 @@ func (m *manager) init() {
 	m.lock.Lock()
 	defer m.lock.Unlock()
 
-	m.supportedDBs = []string{"sqlite", "mysql", "postgresql"}
+	m.supportedDBs = []string{"sqlite", "mysql", "postgresql", "mongodb"}
 
 	// read configs
 	connectionsObj, err := config.GetManager().Get(m.name, "connections")
@@ -53,6 +55,7 @@ func (m *manager) init() {
 	m.sqliteDbInstances = make(map[string]*SqlWrapper[Sqlite])
 	m.mysqlDbInstances = make(map[string]*SqlWrapper[Mysql])
 	m.postgresDbInstances = make(map[string]*SqlWrapper[Postgresql])
+	m.mongoDbInstances = make(map[string]*MongoWrapper)
 
 	for _, item := range connectionsObj.([]interface{}) {
 		dbInstanceName := item.(string)
@@ -71,7 +74,7 @@ func (m *manager) init() {
 				obj, err := NewSqlWrapper[Sqlite](fmt.Sprintf("db/%s", dbInstanceName), dbType)
 				if err != nil {
 					// TODO: log error here
-					return
+					continue
 				}
 
 				m.sqliteDbInstances[dbInstanceName] = reflect.ValueOf(obj).Interface().(*SqlWrapper[Sqlite])
@@ -80,7 +83,7 @@ func (m *manager) init() {
 				obj, err := NewSqlWrapper[Mysql](fmt.Sprintf("db/%s", dbInstanceName), dbType)
 				if err != nil {
 					// TODO: log error here
-					return
+					continue
 				}
 
 				m.mysqlDbInstances[dbInstanceName] = reflect.ValueOf(obj).Interface().(*SqlWrapper[Mysql])
@@ -89,11 +92,18 @@ func (m *manager) init() {
 				obj, err := NewSqlWrapper[Postgresql](fmt.Sprintf("db/%s", dbInstanceName), dbType)
 				if err != nil {
 					// TODO: log error here
-					return
+					continue
 				}
 
 				m.postgresDbInstances[dbInstanceName] = reflect.ValueOf(obj).Interface().(*SqlWrapper[Postgresql])
 				break
+			case "mongodb":
+				obj, err := NewMongoWrapper(fmt.Sprintf("db/%s", dbInstanceName))
+				if err != nil {
+					// TODO: log error here
+					continue
+				}
+				m.mongoDbInstances[dbInstanceName] = obj
 			}
 		}
 	}
@@ -132,39 +142,52 @@ func GetManager() *manager {
 
 // GetDb - Get *gorm.DB instance from the underlying interfaces
 func (m *manager) GetDb(instanceName string) (*gorm.DB, error) {
-	if v, ok := m.sqliteDbInstances[instanceName]; ok {
-		return v.GetDb()
-	} else if v, ok := m.mysqlDbInstances[instanceName]; ok {
-		return v.GetDb()
-	} else if v, ok := m.postgresDbInstances[instanceName]; ok {
-		return v.GetDb()
+	if m.isManagerInitialized {
+		if v, ok := m.sqliteDbInstances[instanceName]; ok {
+			return v.GetDb()
+		} else if v, ok := m.mysqlDbInstances[instanceName]; ok {
+			return v.GetDb()
+		} else if v, ok := m.postgresDbInstances[instanceName]; ok {
+			return v.GetDb()
+		}
 	}
+	return nil, NewNotExistServiceNameErr(instanceName)
+}
 
+// GetMongoDb - Get *mongo.Client instance from the underlying interfaces
+func (m *manager) GetMongoDb(instanceName string) (*mongo.Client, error) {
+	if m.isManagerInitialized {
+		if v, ok := m.mongoDbInstances[instanceName]; ok {
+			return v.GetDb()
+		}
+	}
 	return nil, NewNotExistServiceNameErr(instanceName)
 }
 
 // Migrate - migrate models on specific database
 func (m *manager) Migrate(instanceName string, models ...interface{}) error {
-	if v, ok := m.sqliteDbInstances[instanceName]; ok {
-		return v.Migrate(models)
-	} else if v, ok := m.mysqlDbInstances[instanceName]; ok {
-		return v.Migrate(models)
-	} else if v, ok := m.postgresDbInstances[instanceName]; ok {
-		return v.Migrate(models)
+	if m.isManagerInitialized {
+		if v, ok := m.sqliteDbInstances[instanceName]; ok {
+			return v.Migrate(models)
+		} else if v, ok := m.mysqlDbInstances[instanceName]; ok {
+			return v.Migrate(models)
+		} else if v, ok := m.postgresDbInstances[instanceName]; ok {
+			return v.Migrate(models)
+		}
 	}
-
 	return NewNotExistServiceNameErr(instanceName)
 }
 
 // AttachMigrationFunc -  attach migration function to be called by end user
 func (m *manager) AttachMigrationFunc(instanceName string, f func(migrator gorm.Migrator) error) error {
-	if v, ok := m.sqliteDbInstances[instanceName]; ok {
-		return v.AttachMigrationFunc(f)
-	} else if v, ok := m.mysqlDbInstances[instanceName]; ok {
-		return v.AttachMigrationFunc(f)
-	} else if v, ok := m.postgresDbInstances[instanceName]; ok {
-		return v.AttachMigrationFunc(f)
+	if m.isManagerInitialized {
+		if v, ok := m.sqliteDbInstances[instanceName]; ok {
+			return v.AttachMigrationFunc(f)
+		} else if v, ok := m.mysqlDbInstances[instanceName]; ok {
+			return v.AttachMigrationFunc(f)
+		} else if v, ok := m.postgresDbInstances[instanceName]; ok {
+			return v.AttachMigrationFunc(f)
+		}
 	}
-
 	return NewNotExistServiceNameErr(instanceName)
 }
