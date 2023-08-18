@@ -123,11 +123,6 @@ func initCmdExecute(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	err = createAppDirFiles(cmd, expectedProjectPath, projectName, currentUser.Username, year)
-	if err != nil {
-		return
-	}
-
 	err = execGoModTidy(cmd, expectedProjectPath)
 	if err != nil {
 		return
@@ -184,12 +179,31 @@ func execGoModTidy(cmd *cobra.Command, expectedProjectPath string) error {
 }
 
 func createAppDirFiles(cmd *cobra.Command, expectedProjectPath string, projectName string, username string, year int) error {
-	err := createAppController(cmd, expectedProjectPath, projectName, username, year)
+	err := createAppEngine(cmd, expectedProjectPath, projectName, username, year)
+	if err != nil {
+		return err
+	}
+
+	err = createAppController(cmd, expectedProjectPath, projectName, username, year)
 	if err != nil {
 		return err
 	}
 
 	err = createAppModel(cmd, expectedProjectPath, projectName, username, year)
+	if err != nil {
+		return err
+	}
+
+	pathToCreate := filepath.Join(expectedProjectPath, "app", "proto")
+
+	err = os.Mkdir(pathToCreate, os.ModePerm)
+	if err != nil {
+		fmt.Fprintln(cmd.OutOrStdout())
+		fmt.Fprintf(cmd.OutOrStdout(), SubDirectoryIsNotCreated, "app/proto", err)
+		return err
+	}
+
+	err = createGreeterProtobufFile(cmd, expectedProjectPath, projectName, username, year)
 	if err != nil {
 		return err
 	}
@@ -309,6 +323,45 @@ func createAppModel(cmd *cobra.Command, expectedProjectPath string, projectName 
 	}
 
 	return nil
+}
+
+func createGreeterProtobufFile(cmd *cobra.Command, expectedProjectPath string, projectName string, username string, year int) error {
+	protoGoPath := filepath.Join(expectedProjectPath, "app", "proto", "greeter.proto")
+	file, err := os.Create(protoGoPath)
+	if err != nil {
+		fmt.Fprintln(cmd.OutOrStdout())
+		fmt.Fprintf(cmd.OutOrStdout(), GreeterProtobufIsNotCreated, err)
+		return err
+	}
+	defer file.Close()
+
+	temp := template.Must(template.New("").Parse(greeterProtobufTmpl))
+	//temp := template.Must(template.ParseFiles("./templates/app.proto.greeter.gotmpl"))
+	goModuleVars := struct {
+		ProjectName     string
+		CreatorUserName string
+		Time            time.Time
+		TimeFormat      string
+		Year            int
+	}{
+		ProjectName:     projectName,
+		CreatorUserName: username,
+		Time:            time.Now().Local(),
+		TimeFormat:      time.RFC822,
+		Year:            year,
+	}
+	err = temp.Execute(file, goModuleVars)
+	if err != nil {
+		fmt.Fprintln(cmd.OutOrStdout())
+		fmt.Fprintf(cmd.OutOrStdout(), GreeterProtobufIsNotCreated, err)
+		return err
+	} else {
+		fmt.Fprintln(cmd.OutOrStdout())
+		fmt.Fprintf(cmd.OutOrStdout(), GreeterProtobufIsCreated)
+	}
+
+	return nil
+
 }
 
 func createGoModFile(cmd *cobra.Command, expectedProjectPath string, projectName string, goVersion string) error {
