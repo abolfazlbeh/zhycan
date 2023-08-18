@@ -1,0 +1,12 @@
+{
+  "proto": 3,
+  "servers": [
+    "server1"
+  ],
+  "server1": {
+    "host": "127.0.0.1",
+    "port": 7777,
+    "protocol": "tcp",
+    "async": true
+  }
+}
