@@ -2,6 +2,7 @@ package db
 
 import (
 	"github.com/abolfazlbeh/zhycan/internal/db"
+	"go.mongodb.org/mongo-driver/mongo"
 	"gorm.io/gorm"
 )
 
@@ -18,4 +19,9 @@ func Migrate(instanceName string, models ...interface{}) error {
 // AttachMigrationFunc -  attach migration function to be called by end user
 func AttachMigrationFunc(instanceName string, f func(migrator gorm.Migrator) error) error {
 	return db.GetManager().AttachMigrationFunc(instanceName, f)
+}
+
+// GetMongoDb - Get *mongo.Client instance from the underlying interfaces
+func GetMongoDb(instanceName string) (*mongo.Client, error) {
+	return db.GetManager().GetMongoDb(instanceName)
 }
