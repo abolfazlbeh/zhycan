@@ -70,3 +70,12 @@ type Postgresql struct {
 type SqlConfigurable interface {
 	Sqlite | Mysql | Postgresql
 }
+
+type Mongo struct {
+	DatabaseName string            `json:"db"`
+	Username     string            `json:"username"`
+	Password     string            `json:"password"`
+	Host         string            `json:"host"`
+	Port         string            `json:"port"`
+	Options      map[string]string `json:"options"`
+}
