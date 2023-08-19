@@ -10,6 +10,7 @@ File: `app/controller.go` --> {{ .Time.Format .TimeFormat }} by {{.CreatorUserNa
 package app
 
 import (
+    "fmt"
     "github.com/gofiber/fiber/v2"
     "github.com/abolfazlbeh/zhycan/pkg/http"
 )
@@ -34,4 +35,14 @@ func (ctrl *SampleController) Routes() []http.HttpRoute {
 // GetHello - just return the 'Hello World' string to user
 func (ctrl *SampleController) GetHello(c *fiber.Ctx) error {
     return c.SendString("Hello World")
+}
+
+// MARK: gRPC Controller
+// SampleProtoController - a sample protobuf controller to show the functionality
+type SampleProtoController struct {}
+
+func (ctrl *SampleProtoController) SayHello(ctx context.Context, rq *pb.HelloRequest) (*pb.HelloResponse, error) {
+    return &pb.HelloResponse {
+        Message: fmt.Sprintf("Hello, %s", rq.Name),
+    }, nil
 }

@@ -42,6 +42,30 @@ func TestManager_CheckInitialization(t *testing.T) {
 	}
 }
 
+func TestManager_CheckInitializationMongo(t *testing.T) {
+	makeReadyConfigManager()
+
+	m := manager{}
+	m.init()
+
+	if len(m.mongoDbInstances) != 1 {
+		t.Errorf("Expected manager have %v instance of mongodb, but got %v", 1, len(m.mongoDbInstances))
+		return
+	}
+
+	if v, ok := m.mongoDbInstances["server4"]; ok {
+		expected := reflect.TypeOf(&MongoWrapper{})
+		got := reflect.ValueOf(v).Type()
+		if got != expected {
+			t.Errorf("Expected manager one mongodb instance: %v, but got: %v ", expected, got)
+			return
+		}
+	} else {
+		t.Errorf("Expected manager have %v instance of mongodb for %v, but got nothing", 1, "server1")
+		return
+	}
+}
+
 func TestManager_TestGetDbFunc(t *testing.T) {
 	makeReadyConfigManager()
 

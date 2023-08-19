@@ -43,6 +43,9 @@ const (
 
 	GoModTidyExecutedError = `Zhycan > Cannot execute go mod tidy command ... %v`
 	GoModTidyExecuted      = `Zhycan > "go mod tidy" command is executed ...`
+
+	GreeterProtobufIsNotCreated = `Zhycan > App "greeter.proto" cannot be created ... %v`
+	GreeterProtobufIsCreated    = `Zhycan > App "greeter.proto" is created ...`
 )
 
 const (
@@ -456,6 +459,32 @@ func GetAllUsers() (*[]User, int64, error) {
     }
 
     return &users, result.RowsAffected, nil
+}
+`
+
+	greeterProtobufTmpl = `/*
+Create By Zhycan Framework
+
+Copyright © {{.Year}}
+Project: {{.ProjectName}}
+File: "app/proto/greeter.proto" --> {{ .Time.Format .TimeFormat }} by {{.CreatorUserName}}
+------------------------------
+*/
+
+// The greeting service definition.
+service Greeter {
+  // Sends a greeting
+  rpc SayHello (HelloRequest) returns (HelloResponse) {}
+}
+
+// The request message containing the user's name.
+message HelloRequest {
+  string name = 1;
+}
+
+// The response message containing the greetings
+message HelloResponse {
+  string message = 1;
 }
 `
 )

@@ -1,5 +1,5 @@
 {
-  "connections": ["server1"],
+  "connections": ["server1", "server4"],
   "server1": {
     "type": "sqlite",
     "db": "file.db",
@@ -64,6 +64,24 @@
     "specific_config": {
       "prefer_simple_protocol": true,
       "without_returning": false
+    }
+  },
+  "server4": {
+    "type": "mongodb",
+    "db": "",
+    "username": "username",
+    "password": "password",
+    "host": "127.0.0.1",
+    "port": "27017",
+    "options": {
+      "maxPoolSize": "100",
+      "w": "majority",
+      "connectTimeoutMS": "30000"
+    },
+    "logger": {
+      "component_command": "debug",
+      "component_connection": "info",
+      "max_document_length": 1000
     }
   }
 }

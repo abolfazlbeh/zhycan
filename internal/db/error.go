@@ -75,3 +75,18 @@ func (err *MigrateErr) Error() string {
 func NewMigrateErr(err error) error {
 	return &MigrateErr{Err: err}
 }
+
+// CreateMongoWrapperErr Error
+type CreateMongoWrapperErr struct {
+	Err error
+}
+
+// Error method - satisfying error interface
+func (err *CreateMongoWrapperErr) Error() string {
+	return fmt.Sprintf("Create a new mongo wrapper encounterred an error: %v", err.Err)
+}
+
+// NewCreateMongoWrapperErr - return a new instance of CreateMongoWrapperErr
+func NewCreateMongoWrapperErr(err error) error {
+	return &CreateMongoWrapperErr{Err: err}
+}
