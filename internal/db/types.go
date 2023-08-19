@@ -71,11 +71,18 @@ type SqlConfigurable interface {
 	Sqlite | Mysql | Postgresql
 }
 
+type MongoLoggerConfig struct {
+	MaxDocumentLength   int    `json:"max_document_length"`
+	ComponentCommand    string `json:"component_command"`
+	ComponentConnection string `json:"component_connection"`
+}
+
 type Mongo struct {
-	DatabaseName string            `json:"db"`
-	Username     string            `json:"username"`
-	Password     string            `json:"password"`
-	Host         string            `json:"host"`
-	Port         string            `json:"port"`
-	Options      map[string]string `json:"options"`
+	DatabaseName string             `json:"db"`
+	Username     string             `json:"username"`
+	Password     string             `json:"password"`
+	Host         string             `json:"host"`
+	Port         string             `json:"port"`
+	Options      map[string]string  `json:"options"`
+	LoggerConfig *MongoLoggerConfig `json:"logger"`
 }
