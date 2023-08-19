@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/abolfazlbeh/zhycan/internal/config"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -25,35 +26,46 @@ func (m *MongoWrapper) init(name string) error {
 	// reading config
 	nameParts := strings.Split(m.name, "/")
 
-	dbNameKey := fmt.Sprintf("%s.%s", nameParts[1], "db")
-	dbNameStr, err := config.GetManager().Get(nameParts[0], dbNameKey)
-	if err != nil {
-		return err
+	var tempConfig *Mongo
+	tempConfigObj, err := config.GetManager().Get(nameParts[0], nameParts[1])
+	if err == nil {
+		// first marshal
+		configData, err := json.Marshal(tempConfigObj)
+		if err == nil {
+			_ = json.Unmarshal(configData, &tempConfig)
+		}
 	}
+	m.config = tempConfig
 
-	hostKey := fmt.Sprintf("%s.%s", nameParts[1], "host")
-	hostStr, err := config.GetManager().Get(nameParts[0], hostKey)
-	if err != nil {
-		return err
-	}
-
-	portKey := fmt.Sprintf("%s.%s", nameParts[1], "port")
-	portStr, err := config.GetManager().Get(nameParts[0], portKey)
-	if err != nil {
-		return err
-	}
-
-	usernameKey := fmt.Sprintf("%s.%s", nameParts[1], "username")
-	usernameStr, err := config.GetManager().Get(nameParts[0], usernameKey)
-	if err != nil {
-		return err
-	}
-
-	passwordKey := fmt.Sprintf("%s.%s", nameParts[1], "password")
-	passwordStr, err := config.GetManager().Get(nameParts[0], passwordKey)
-	if err != nil {
-		return err
-	}
+	//dbNameKey := fmt.Sprintf("%s.%s", nameParts[1], "db")
+	//dbNameStr, err := config.GetManager().Get(nameParts[0], dbNameKey)
+	//if err != nil {
+	//	return err
+	//}
+	//
+	//hostKey := fmt.Sprintf("%s.%s", nameParts[1], "host")
+	//hostStr, err := config.GetManager().Get(nameParts[0], hostKey)
+	//if err != nil {
+	//	return err
+	//}
+	//
+	//portKey := fmt.Sprintf("%s.%s", nameParts[1], "port")
+	//portStr, err := config.GetManager().Get(nameParts[0], portKey)
+	//if err != nil {
+	//	return err
+	//}
+	//
+	//usernameKey := fmt.Sprintf("%s.%s", nameParts[1], "username")
+	//usernameStr, err := config.GetManager().Get(nameParts[0], usernameKey)
+	//if err != nil {
+	//	return err
+	//}
+	//
+	//passwordKey := fmt.Sprintf("%s.%s", nameParts[1], "password")
+	//passwordStr, err := config.GetManager().Get(nameParts[0], passwordKey)
+	//if err != nil {
+	//	return err
+	//}
 
 	optionsKey := fmt.Sprintf("%s.%s", nameParts[1], "options")
 	optionsObj, err := config.GetManager().Get(nameParts[0], optionsKey)
@@ -65,15 +77,29 @@ func (m *MongoWrapper) init(name string) error {
 	for key, item := range optionsObj.(map[string]interface{}) {
 		optionsMap[key] = item.(string)
 	}
+	m.config.Options = optionsMap
 
-	m.config = &Mongo{
-		DatabaseName: dbNameStr.(string),
-		Username:     usernameStr.(string),
-		Password:     passwordStr.(string),
-		Host:         hostStr.(string),
-		Port:         portStr.(string),
-		Options:      optionsMap,
+	var internalLogger *MongoLoggerConfig
+
+	internalLoggerKey := fmt.Sprintf("%s.%s", nameParts[1], "logger")
+	internalLoggerObj, err := config.GetManager().Get(nameParts[0], internalLoggerKey)
+	if err == nil {
+		// first marshal
+		configData, err := json.Marshal(internalLoggerObj)
+		if err == nil {
+			_ = json.Unmarshal(configData, &internalLogger)
+		}
 	}
+	m.config.LoggerConfig = internalLogger
+
+	//m.config = &Mongo{
+	//	DatabaseName: dbNameStr.(string),
+	//	Username:     usernameStr.(string),
+	//	Password:     passwordStr.(string),
+	//	Host:         hostStr.(string),
+	//	Port:         portStr.(string),
+	//	Options:      optionsMap,
+	//}
 	return nil
 }
 
@@ -99,7 +125,23 @@ func (m *MongoWrapper) GetDb() (*mongo.Client, error) {
 	if m.databaseInstance == nil {
 		uri := m.makeUri()
 
-		db, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(uri))
+		// Configure Logger Options
+		loggerOptions := options.Logger().SetSink(&MongoLogger{}).SetMaxDocumentLength(uint(m.config.LoggerConfig.MaxDocumentLength))
+		switch m.config.LoggerConfig.ComponentConnection {
+		case "info":
+			loggerOptions = loggerOptions.SetComponentLevel(options.LogComponentConnection, options.LogLevelInfo)
+		default:
+			loggerOptions = loggerOptions.SetComponentLevel(options.LogComponentConnection, options.LogLevelDebug)
+		}
+
+		switch m.config.LoggerConfig.ComponentCommand {
+		case "info":
+			loggerOptions = loggerOptions.SetComponentLevel(options.LogComponentCommand, options.LogLevelInfo)
+		default:
+			loggerOptions = loggerOptions.SetComponentLevel(options.LogComponentCommand, options.LogLevelDebug)
+		}
+
+		db, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(uri).SetLoggerOptions(loggerOptions))
 		if err != nil {
 			return nil, err
 		}

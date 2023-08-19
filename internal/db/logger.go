@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	zlogger "github.com/abolfazlbeh/zhycan/internal/logger"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"gorm.io/gorm/logger"
 	"gorm.io/gorm/utils"
 	"strings"
@@ -153,5 +154,37 @@ func (l DbLogger) Trace(ctx context.Context, begin time.Time, fc func() (string,
 				))
 			}
 		}
+	}
+}
+
+// MongoLogger - Mongo DB Logger struct
+type MongoLogger struct {
+}
+
+func (m *MongoLogger) Info(level int, message string, keysAndValues ...interface{}) {
+	ll, _ := zlogger.GetManager().GetLogger()
+	if ll != nil {
+		if options.LogLevel(level) == options.LogLevelInfo {
+			ll.Log(zlogger.NewLogObject(
+				zlogger.INFO, "mongodb", DbLogType,
+				time.Now().UTC(), message, keysAndValues,
+			))
+		} else if options.LogLevel(level) == options.LogLevelDebug {
+			ll.Log(zlogger.NewLogObject(
+				zlogger.DEBUG, "mongodb", DbLogType,
+				time.Now().UTC(), message, keysAndValues,
+			))
+		}
+	}
+}
+
+func (m *MongoLogger) Error(err error, message string, keysAndValues ...interface{}) {
+	ll, _ := zlogger.GetManager().GetLogger()
+	if ll != nil {
+		msg := fmt.Sprintf("%s -> err: %v", message, err)
+		ll.Log(zlogger.NewLogObject(
+			zlogger.ERROR, "mongodb", DbLogType,
+			time.Now().UTC(), msg, keysAndValues,
+		))
 	}
 }
