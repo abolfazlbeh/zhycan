@@ -117,3 +117,12 @@ func (s *ServerWrapper) Stop() {
 func (s *ServerWrapper) IsInitialized() bool {
 	return s.initialized
 }
+
+func (s *ServerWrapper) RegisterController(f func(server *grpc.Server, cls interface{}), realClass interface{}) error {
+	if realClass != nil {
+		f(s.grpcServer, realClass)
+		return nil
+	}
+
+	return NewNilServiceRegistryError()
+}

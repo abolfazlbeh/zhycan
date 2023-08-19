@@ -141,3 +141,12 @@ func (m *manager) StopServers() {
 	}
 	m.isStarted = false
 }
+
+// GetServerByName - get server instance by its name
+func (m *manager) GetServerByName(name string) (*ServerWrapper, error) {
+	if v, ok := m.servers[name]; ok {
+		return v, nil
+	}
+
+	return nil, NewGrpcServerNotExistError(name)
+}

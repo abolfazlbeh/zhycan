@@ -47,3 +47,32 @@ func (err *CreateServerErr) Error() string {
 func NewCreateServerErr(err error) error {
 	return &CreateServerErr{Err: err}
 }
+
+// GrpcServerNotExistError struct
+type GrpcServerNotExistError struct {
+	name string
+}
+
+// Error method - satisfying error interface
+func (err *GrpcServerNotExistError) Error() string {
+	return fmt.Sprintf("gRPC server with specified name `%v` not exist", err.name)
+}
+
+// NewGrpcServerNotExistError - return a new instance of GrpcServerNotExistError
+func NewGrpcServerNotExistError(name string) error {
+	return &GrpcServerNotExistError{name: name}
+}
+
+// NilServiceRegistryError struct
+type NilServiceRegistryError struct {
+}
+
+// Error method - satisfying error interface
+func (err *NilServiceRegistryError) Error() string {
+	return fmt.Sprintf("Register a Nil service to gRPC server")
+}
+
+// NewNilServiceRegistryError - return a new instance of NilServiceRegistryError
+func NewNilServiceRegistryError() error {
+	return &NilServiceRegistryError{}
+}
