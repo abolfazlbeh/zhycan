@@ -9,8 +9,10 @@ File: `root.go` --> {{ .Time.Format .TimeFormat }} by {{.CreatorUserName}}
 package commands
 
 import (
+    "fmt"
 	"github.com/spf13/cobra"
-	"github.com/abolfazlbeh/zhycan/pkg/command"
+	"github.com/abolfazlbeh/zhycan/pkg/cli"
+	{{.ProjectName}}/app/app"
 	"os"
 )
 
@@ -24,6 +26,12 @@ examples and usage of using your application. For example:
 Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		if cmd.Use == "runserver" {
+			app1 := &app.App{}
+			app1.Init()
+		}
+	},
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -48,7 +56,7 @@ func init() {
 	//rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 
     // Attach Default Zhycan Cli Commands
-    command.AttachCommands(rootCmd)
+    cli.AttachCommands(rootCmd)
 
 	// MARK:Commands --- And New Commands Below ---
 	// rootCmd.AddCommand(NewInitCmd())

@@ -33,10 +33,6 @@ func main() {
         return
     }
 
-    // Testing the logger module works properly
-    logger.Log(logger.NewLogObject(
-        logger.INFO, "main.go", logger.FuncMaintenanceType, time.Now().UTC(), "Logger Module Works Like A Charm ...", nil))
-
     // Execute the provided command
     commands.Execute()
 }

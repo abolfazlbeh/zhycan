@@ -18,7 +18,7 @@ var ExpectedSubDirectories = func() []string {
 }
 
 var ExpectedConfigFiles = func() []string {
-	return []string{"base", "logger"}
+	return []string{"base", "logger", "db", "http"}
 }
 
 var ExpectedConfigContentTmpl = func() map[string]string {
@@ -26,6 +26,7 @@ var ExpectedConfigContentTmpl = func() map[string]string {
 		"base":   baseConfigTmpl,
 		"logger": loggerConfigTmpl,
 		"http":   httpConfigTmpl,
+		"db":     dbConfigTmpl,
 	}
 }
 

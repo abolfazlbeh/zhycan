@@ -403,7 +403,12 @@ func (s *SqlWrapper[T]) GetDb() (*gorm.DB, error) {
 
 // Migrate - migrate models to the database
 func (s *SqlWrapper[T]) Migrate(models ...interface{}) error {
-	err := s.databaseInstance.AutoMigrate(models...)
+	db, err := s.GetDb()
+	if err != nil {
+		return err
+	}
+
+	err = db.AutoMigrate(models...)
 	if err != nil {
 		return NewMigrateErr(err)
 	}
