@@ -168,11 +168,11 @@ func (m *manager) GetMongoDb(instanceName string) (*mongo.Client, error) {
 func (m *manager) Migrate(instanceName string, models ...interface{}) error {
 	if m.isManagerInitialized {
 		if v, ok := m.sqliteDbInstances[instanceName]; ok {
-			return v.Migrate(models)
+			return v.Migrate(models...)
 		} else if v, ok := m.mysqlDbInstances[instanceName]; ok {
-			return v.Migrate(models)
+			return v.Migrate(models...)
 		} else if v, ok := m.postgresDbInstances[instanceName]; ok {
-			return v.Migrate(models)
+			return v.Migrate(models...)
 		}
 	}
 	return NewNotExistServiceNameErr(instanceName)

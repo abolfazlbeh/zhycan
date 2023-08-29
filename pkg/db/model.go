@@ -13,7 +13,7 @@ func GetDb(instanceName string) (*gorm.DB, error) {
 
 // Migrate - migrate models on specific database
 func Migrate(instanceName string, models ...interface{}) error {
-	return db.GetManager().Migrate(instanceName, models)
+	return db.GetManager().Migrate(instanceName, models...)
 }
 
 // AttachMigrationFunc -  attach migration function to be called by end user

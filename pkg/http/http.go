@@ -1,6 +1,7 @@
 package http
 
 import (
+	"fmt"
 	"github.com/abolfazlbeh/zhycan/internal/http"
 	"github.com/gofiber/fiber/v2"
 )
@@ -26,14 +27,14 @@ type HttpRoute struct {
 	RouteName  string
 	Versions   []string
 	GroupNames []string
-	F          *func(c *fiber.Ctx) error
+	F          func(c *fiber.Ctx) error
 	Servers    []string
 }
 
 // HttpGroup - Structure of the group
 type HttpGroup struct {
 	GroupName string
-	F         *func(c *fiber.Ctx) error
+	F         func(c *fiber.Ctx) error
 	Groups    []string
 	Servers   []string
 }
@@ -42,7 +43,7 @@ type HttpGroup struct {
 func AddHttpRouteByObj(httpRoute HttpRoute) error {
 	return http.GetManager().AddRoute(httpRoute.Method,
 		httpRoute.Path,
-		*httpRoute.F,
+		httpRoute.F,
 		httpRoute.RouteName,
 		httpRoute.Versions,
 		httpRoute.GroupNames,
@@ -65,7 +66,7 @@ func AddBulkHttpRoutes(httpRoutes []HttpRoute) error {
 	for _, httpRoute := range httpRoutes {
 		err := http.GetManager().AddRoute(httpRoute.Method,
 			httpRoute.Path,
-			*httpRoute.F,
+			httpRoute.F,
 			httpRoute.RouteName,
 			httpRoute.Versions,
 			httpRoute.GroupNames,
@@ -86,7 +87,7 @@ func GetRouteByName(routeName string, serverName ...string) (*fiber.Route, error
 func AddHttpGroupByObj(group HttpGroup) error {
 	return http.GetManager().AddGroup(
 		group.GroupName,
-		*group.F,
+		group.F,
 		group.Groups,
 		group.Servers...,
 	)
@@ -103,7 +104,7 @@ func AddBulkHttpGroups(httpGroups []HttpGroup) error {
 	for _, group := range httpGroups {
 		err := http.GetManager().AddGroup(
 			group.GroupName,
-			*group.F,
+			group.F,
 			group.Groups,
 			group.Servers...,
 		)
@@ -117,4 +118,12 @@ func AddBulkHttpGroups(httpGroups []HttpGroup) error {
 // AttachHttpErrorHandler - Attach http error handler to the manager
 func AttachHttpErrorHandler(f func(ctx *fiber.Ctx, err error) error, serverNames ...string) error {
 	return http.GetManager().AttachErrorHandler(f, serverNames...)
+}
+
+// PrintAllRoutes - Print all routes on the screen
+func PrintAllRoutes() {
+	routes := http.GetManager().GetAllRoutes()
+	for _, item := range routes {
+		fmt.Println(item)
+	}
 }

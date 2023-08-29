@@ -413,3 +413,8 @@ func (s *Server) AddRouteWithMultiHandlers(method string, path string, f []func(
 
 	return NewNotSupportedHttpMethodErr(method)
 }
+
+// GetAllRoutes - Get all Routes
+func (s *Server) GetAllRoutes() []fiber.Route {
+	return s.app.GetRoutes(true)
+}

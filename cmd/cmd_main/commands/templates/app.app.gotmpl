@@ -10,7 +10,9 @@ File: `app/app.go` --> {{ .Time.Format .TimeFormat }} by {{.CreatorUserName}}
 package app
 
 import (
+	"github.com/abolfazlbeh/zhycan/pkg/db"
     "github.com/abolfazlbeh/zhycan/pkg/engine"
+    "github.com/abolfazlbeh/zhycan/pkg/http"
 )
 
 // MARK: App Engine
@@ -20,9 +22,18 @@ type App struct {}
 
 // Init - initialize the app
 func (app *App) Init() {
-    err := engine.RegisterRestfulController(&SampleController{Name: "sample"})
+// Uncomment the following to migrate models to database and synchronization
+//	err := db.Migrate("server1", &User{})
+//	if err != nil {
+//		logger.Log(logger.NewLogObject(
+//			logger.ERROR, "app.go", logger.FuncMaintenanceType, time.Now().UTC(), "Migrating databases encounter error", err))
+//	}
+
+    err := engine.RegisterRestfulController(&SampleController{})
     if err != nil {
         logger.Log(logger.NewLogObject(
             logger.ERROR, "App.Init", logger.FuncMaintenanceType, time.Now().UTC(), "Cannot Register Restful Controller", err))
     }
+
+    http.PrintAllRoutes()
 }

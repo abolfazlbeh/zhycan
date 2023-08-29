@@ -227,3 +227,14 @@ func (m *manager) AttachErrorHandler(f func(ctx *fiber.Ctx, err error) error, se
 
 	return NewAttachErrorHandlerToNilServerErr(serverNames...)
 }
+
+// GetAllRoutes - Get all routes from all configured server
+func (m *manager) GetAllRoutes() []fiber.Route {
+	var routes []fiber.Route
+
+	for _, item := range m.servers {
+		routes = append(routes, item.GetAllRoutes()...)
+	}
+
+	return routes
+}
