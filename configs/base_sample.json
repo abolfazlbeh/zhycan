@@ -9,6 +9,7 @@
     {"name":"logger", "type": "local"},
     {"name":"db", "type": "local"},
     {"name":"server", "type": "remote"},
-    {"name":"http", "type": "local"}
+    {"name":"http", "type": "local"},
+    {"name":"cache", "type": "local"}
   ]
 }

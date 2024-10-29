@@ -2,6 +2,8 @@ package command
 
 import (
 	"fmt"
+	"github.com/abolfazlbeh/zhycan/internal/cache"
+	"github.com/abolfazlbeh/zhycan/internal/grpc"
 	"github.com/abolfazlbeh/zhycan/internal/http"
 	"github.com/spf13/cobra"
 	"os"
@@ -34,8 +36,10 @@ func runServerCmdExecuteE(cmd *cobra.Command, args []string) error {
 func runServerCmdExecute(cmd *cobra.Command, args []string) {
 	// TODO: in future 'args' must be considered
 	fmt.Fprintf(cmd.OutOrStdout(), RunServerInitMsg)
+	m := cache.GetManager()
 
 	http.GetManager().StartServers()
+	grpc.GetManager().StartServers()
 
 	quit := make(chan os.Signal)
 	// kill (no param) default send syscall.SIGTERM
@@ -43,5 +47,29 @@ func runServerCmdExecute(cmd *cobra.Command, args []string) {
 	// kill -9 is syscall.SIGKILL but can't be caught, so don't need to add it
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
+
 	fmt.Fprintf(cmd.OutOrStdout(), RunServerShutdownMsg)
+
+	http.GetManager().StopServers()
+	grpc.GetManager().StopServers()
+	err := m.Release()
+	if err != nil {
+		fmt.Fprintf(cmd.OutOrStdout(), err.Error())
+	}
+
+	//var wg sync.WaitGroup
+	//wg.Add(1)
+	//
+	//go func() {
+	//	quit := make(chan os.Signal)
+	//	// kill (no param) default send syscall.SIGTERM
+	//	// kill -2 is syscall.SIGINT
+	//	// kill -9 is syscall.SIGKILL but can't be caught, so don't need to add it
+	//	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	//	<-quit
+	//
+	//	wg.Done()
+	//}()
+	//
+	//wg.Wait()
 }

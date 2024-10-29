@@ -12,7 +12,7 @@ import (
 func RegisterRestfulController(app engine.RestfulApp) {
 	routes := app.Routes()
 
-	controllerName := app.GetName()
+	controllerName := strings.ToLower(app.GetName())
 	if strings.TrimSpace(controllerName) != "" {
 		http.AddHttpGroupByObj(http.HttpGroup{
 			GroupName: controllerName,
@@ -36,11 +36,11 @@ func (c Controller) GetName() string {
 	return c.name
 }
 
-func RegisterGrpcController(app engine.GrpcApp, registerFunc func(server *grpc.Server, cls interface{})) {
+func RegisterGrpcController(app engine.GrpcApp, f func(server *grpc.Server)) {
 	controllerName := app.GetName()
 	serverNames := app.GetServerNames()
 
-	if strings.TrimSpace(controllerName) != "" {
+	if strings.TrimSpace(controllerName) == "" {
 		return
 	}
 
@@ -54,10 +54,7 @@ func RegisterGrpcController(app engine.GrpcApp, registerFunc func(server *grpc.S
 			// TODO: log the error
 			continue
 		}
-		err = srv.RegisterController(registerFunc, app)
-		if err != nil {
-			// TODO: log the error
-			continue
-		}
+
+		f(srv.GetGrpcServer())
 	}
 }

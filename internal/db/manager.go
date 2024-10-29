@@ -3,6 +3,7 @@ package db
 import (
 	"fmt"
 	"github.com/abolfazlbeh/zhycan/internal/config"
+	"github.com/abolfazlbeh/zhycan/internal/logger/types"
 	"github.com/abolfazlbeh/zhycan/internal/utils"
 	"go.mongodb.org/mongo-driver/mongo"
 	"gorm.io/gorm"
@@ -155,7 +156,7 @@ func (m *manager) GetDb(instanceName string) (*gorm.DB, error) {
 }
 
 // GetMongoDb - Get *mongo.Client instance from the underlying interfaces
-func (m *manager) GetMongoDb(instanceName string) (*mongo.Client, error) {
+func (m *manager) GetMongoDb(instanceName string) (*mongo.Database, error) {
 	if m.isManagerInitialized {
 		if v, ok := m.mongoDbInstances[instanceName]; ok {
 			return v.GetDb()
@@ -190,4 +191,18 @@ func (m *manager) AttachMigrationFunc(instanceName string, f func(migrator gorm.
 		}
 	}
 	return NewNotExistServiceNameErr(instanceName)
+}
+
+func (m *manager) RegisterLogger(l types.Logger) {
+	for _, item := range m.sqliteDbInstances {
+		item.RegisterLogger(l)
+	}
+
+	for _, item := range m.mysqlDbInstances {
+		item.RegisterLogger(l)
+	}
+
+	for _, item := range m.postgresDbInstances {
+		item.RegisterLogger(l)
+	}
 }

@@ -2,11 +2,14 @@ package http
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/abolfazlbeh/zhycan/internal/config"
+	"github.com/abolfazlbeh/zhycan/internal/http/types"
 	"github.com/abolfazlbeh/zhycan/internal/utils"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gin-gonic/gin"
 	"log"
 	"sync"
+	"time"
 )
 
 // Mark: manager
@@ -15,7 +18,7 @@ import (
 type manager struct {
 	name             string
 	lock             sync.Mutex
-	servers          map[string]*Server
+	servers          map[string]*GinServer
 	defaultServer    string
 	isServersStarted bool
 }
@@ -43,7 +46,9 @@ func (m *manager) init() {
 	}
 
 	var serverNames []string
-	m.servers = make(map[string]*Server)
+	if m.servers == nil {
+		m.servers = make(map[string]*GinServer)
+	}
 
 	for _, item := range serversCfg.([]interface{}) {
 		jsonBody, err2 := json.Marshal(item)
@@ -51,14 +56,35 @@ func (m *manager) init() {
 			continue
 		}
 
-		var obj ServerConfig
+		var obj types.GinServerConfig
 		err := json.Unmarshal(jsonBody, &obj)
 		if err == nil {
-			server, err1 := NewServer(m.name, obj)
-			if err1 == nil {
-				m.servers[obj.Name] = server
+			//first check server existed -> if not exist -> create a new one
+			if server1, ok := m.servers[obj.Name]; ok {
+				// just update the server with new config
+				err1 := server1.UpdateConfigs(obj, item.(map[string]interface{}))
+				if err1 != nil {
+					server1.Stop()
+					delete(m.servers, obj.Name)
+					var k int
+					for i, v := range serverNames {
+						if v == obj.Name {
+							k = i
+							break
+						}
+					}
 
-				serverNames = append(serverNames, obj.Name)
+					if k >= 0 {
+						serverNames = append(serverNames[:k], serverNames[k+1:]...)
+					}
+				}
+			} else {
+				server, err1 := NewGinServer(m.name, obj, item.(map[string]interface{}))
+				if err1 == nil {
+					m.servers[obj.Name] = server
+
+					serverNames = append(serverNames, obj.Name)
+				}
 			}
 		}
 	}
@@ -112,14 +138,30 @@ func (m *manager) StartServers() error {
 	defer m.lock.Unlock()
 
 	if !m.isServersStarted {
+		ch := make(chan error, len(m.servers))
+
 		for _, item := range m.servers {
-			go func(s *Server) {
+			go func(s *GinServer, c chan error) {
 				err := s.Start()
 				if err != nil {
-					// TODO: print some error
+					c <- err
 				}
-			}(item)
+			}(item, ch)
 		}
+
+		exitTheLoop := true
+		for exitTheLoop {
+			select {
+			case <-time.After(time.Second * 3):
+				exitTheLoop = false
+			case result := <-ch:
+				// Todo: log the errors
+				fmt.Printf("Error Starting Server: %v\n", result)
+
+			}
+		}
+
+		m.isServersStarted = true
 	}
 	return nil
 }
@@ -131,7 +173,7 @@ func (m *manager) StopServers() error {
 
 	if m.isServersStarted {
 		for _, item := range m.servers {
-			go func(s *Server) {
+			go func(s *GinServer) {
 				err := s.Stop()
 				if err != nil {
 					// TODO: print some error
@@ -143,7 +185,7 @@ func (m *manager) StopServers() error {
 }
 
 // AddRoute - add a route to the server with specified name
-func (m *manager) AddRoute(method string, path string, f func(c *fiber.Ctx) error, routeName string, versions []string, groupNames []string, serverName ...string) error {
+func (m *manager) AddRoute(method string, path string, f func(c *gin.Context), routeName string, versions []string, groupNames []string, serverName ...string) error {
 	if len(serverName) > 0 {
 		for _, sn := range serverName {
 			if s, ok := m.servers[sn]; ok {
@@ -158,25 +200,25 @@ func (m *manager) AddRoute(method string, path string, f func(c *fiber.Ctx) erro
 	return NewAddRouteToNilServerErr(path)
 }
 
-func (m *manager) GetRouteByName(routeName string, serverName ...string) (*fiber.Route, error) {
-	if len(serverName) > 1 {
-		return nil, NewFromMultipleServerErr()
-	} else if len(serverName) == 1 {
-		for _, sn := range serverName {
-			if s, ok := m.servers[sn]; ok {
-				return s.GetRouteByName(routeName)
-			}
-		}
-	} else {
-		if m.defaultServer != "" {
-			return m.servers[m.defaultServer].GetRouteByName(routeName)
-		}
-	}
-	return nil, NewFromNilServerErr()
-}
+//func (m *manager) GetRouteByName(routeName string, serverName ...string) (*fiber.Route, error) {
+//	if len(serverName) > 1 {
+//		return nil, NewFromMultipleServerErr()
+//	} else if len(serverName) == 1 {
+//		for _, sn := range serverName {
+//			if s, ok := m.servers[sn]; ok {
+//				return s.GetRouteByName(routeName)
+//			}
+//		}
+//	} else {
+//		if m.defaultServer != "" {
+//			return m.servers[m.defaultServer].GetRouteByName(routeName)
+//		}
+//	}
+//	return nil, NewFromNilServerErr()
+//}
 
 // AddGroup - add a group to the server with specified name
-func (m *manager) AddGroup(groupName string, f func(c *fiber.Ctx) error, groupsName []string, serverName ...string) error {
+func (m *manager) AddGroup(groupName string, f func(c *gin.Context), groupsName []string, serverName ...string) error {
 	if serverName != nil {
 		if len(serverName) > 0 {
 			for _, sn := range serverName {
@@ -210,7 +252,7 @@ func (m *manager) AddGroup(groupName string, f func(c *fiber.Ctx) error, groupsN
 }
 
 // AttachErrorHandler - attach a custom error handler to the server with specified name
-func (m *manager) AttachErrorHandler(f func(ctx *fiber.Ctx, err error) error, serverNames ...string) error {
+func (m *manager) AttachErrorHandler(f func(ctx *gin.Context, err any), serverNames ...string) error {
 	if len(serverNames) > 0 {
 		for _, sn := range serverNames {
 			if s, ok := m.servers[sn]; ok {
@@ -228,13 +270,12 @@ func (m *manager) AttachErrorHandler(f func(ctx *fiber.Ctx, err error) error, se
 	return NewAttachErrorHandlerToNilServerErr(serverNames...)
 }
 
-// GetAllRoutes - Get all routes from all configured server
-func (m *manager) GetAllRoutes() []fiber.Route {
-	var routes []fiber.Route
+// GetAllRoutes - return all routes of the server
+func (m *manager) GetAllRoutes() []gin.RouteInfo {
+	var routes []gin.RouteInfo
 
 	for _, item := range m.servers {
 		routes = append(routes, item.GetAllRoutes()...)
 	}
-
 	return routes
 }

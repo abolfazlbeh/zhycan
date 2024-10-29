@@ -179,3 +179,18 @@ func (err *AttachErrorHandlerToNilServerErr) Error() string {
 func NewAttachErrorHandlerToNilServerErr(serverNames ...string) error {
 	return &AttachErrorHandlerToNilServerErr{serverNames: serverNames}
 }
+
+// UpdateServerConfigErr Error
+type UpdateServerConfigErr struct {
+	Err error
+}
+
+// Error method - satisfying error interface
+func (err *UpdateServerConfigErr) Error() string {
+	return fmt.Sprintf("Create a new server encounterred an error: %v", err.Err)
+}
+
+// NewUpdateServerConfigErr - return a new instance of UpdateServerConfigErr
+func NewUpdateServerConfigErr(err error) error {
+	return &UpdateServerConfigErr{Err: err}
+}

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/abolfazlbeh/zhycan/internal/config"
+	"github.com/abolfazlbeh/zhycan/internal/logger/types"
 	"github.com/abolfazlbeh/zhycan/internal/utils"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -21,7 +22,7 @@ type ZapWrapper struct {
 	name            string
 	serviceName     string
 	logger          *zap.Logger
-	ch              chan LogObject
+	ch              chan types.LogObject
 	initialized     bool
 	wg              sync.WaitGroup
 	operationType   string
@@ -64,7 +65,7 @@ func (l *ZapWrapper) Constructor(name string) error {
 		outputArray = append(outputArray, v.(string))
 	}
 
-	l.ch = make(chan LogObject, int(channelSize.(float64)))
+	l.ch = make(chan types.LogObject, int(channelSize.(float64)))
 
 	if l.operationType == "prod" {
 		productionEncoderConfig := zap.NewProductionEncoderConfig()
@@ -244,10 +245,10 @@ func (l *ZapWrapper) Close() {
 }
 
 // Log - write log object to the channel
-func (l *ZapWrapper) Log(obj *LogObject) {
+func (l *ZapWrapper) Log(obj *types.LogObject) {
 	l.wg.Wait()
 
-	go func(obj *LogObject) {
+	go func(obj *types.LogObject) {
 		l.ch <- *obj
 	}(obj)
 }
@@ -282,16 +283,16 @@ func (l *ZapWrapper) runner() {
 				zap.Any("additional", c.Additional),
 			}
 			switch c.Level {
-			case DEBUG:
+			case types.DEBUG:
 				l.logger.Debug(fmt.Sprintf("%v", c.Message), f...)
 				break
-			case INFO:
+			case types.INFO:
 				l.logger.Info(fmt.Sprintf("%v", c.Message), f...)
 				break
-			case WARNING:
+			case types.WARNING:
 				l.logger.Warn(fmt.Sprintf("%v", c.Message), f...)
 				break
-			case ERROR:
+			case types.ERROR:
 				l.logger.Error(fmt.Sprintf("%v", c.Message), f...)
 				break
 			}

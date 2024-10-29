@@ -1,0 +1,29 @@
+{
+  "type": "redis",
+  "redis_type": "client",
+  "add_service_prefix": true,
+  "enable_lock": true,
+  "client": {
+    "address": "172.25.204.61:6379",
+    "password": "",
+    "db": 0,
+    "max_retries": 0,
+    "min_retry_backoff": 8,
+    "max_retry_backoff": 512,
+    "dial_timeout": 5000,
+    "read_timeout": 3000,
+    "write_timeout": 3000,
+    "pool_size_per_cpu": 10,
+    "min_idle_conn": 1,
+    "max_conn_age": -1,
+    "pool_timeout": 4000,
+    "idle_timeout": 5000,
+    "idle_check_frequency": 1000,
+    "on_connect_log": true
+  },
+  "memcache": {
+    "address": ["172.25.204.61:11211"],
+    "timeout": 5000,
+    "max_idle_conn": 2
+  }
+}

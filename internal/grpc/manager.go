@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/abolfazlbeh/zhycan/internal/config"
 	"github.com/abolfazlbeh/zhycan/internal/logger"
+	"github.com/abolfazlbeh/zhycan/internal/logger/types"
 	"log"
 	"sync"
 	"time"
@@ -12,7 +13,7 @@ import (
 // MARK: Variables
 
 var (
-	gRPCMaintenanceType = logger.NewLogType("PROTOBUF_MANAGER_MAINTENANCE")
+	gRPCMaintenanceType = types.NewLogType("PROTOBUF_MANAGER_MAINTENANCE")
 )
 
 // Mark: manager
@@ -109,7 +110,7 @@ func (m *manager) StartServers() {
 			err := item.Start(&ch)
 			if err != nil {
 				if l != nil {
-					l.Log(logger.NewLogObject(logger.ERROR, "protobuf.manager.StartServer", gRPCMaintenanceType, time.Now(), "Cannot start server ...", err))
+					l.Log(types.NewLogObject(types.ERROR, "protobuf.manager.StartServer", gRPCMaintenanceType, time.Now(), "Cannot start server ...", err))
 				}
 			}
 		}
@@ -119,13 +120,13 @@ func (m *manager) StartServers() {
 		select {
 		case err := <-*ch1:
 			if l != nil {
-				l.Log(logger.NewLogObject(logger.ERROR, "protobuf.manager.StartServer", gRPCMaintenanceType, time.Now(), "Cannot start server ...", err))
+				l.Log(types.NewLogObject(types.ERROR, "protobuf.manager.StartServer", gRPCMaintenanceType, time.Now(), "Cannot start server ...", err))
 			}
 		}
 	}(&ch)
 
 	if l != nil {
-		l.Log(logger.NewLogObject(logger.INFO, "protobuf.manager.StartServer", gRPCMaintenanceType, time.Now(), "Engine Started ...", nil))
+		l.Log(types.NewLogObject(types.INFO, "protobuf.manager.StartServer", gRPCMaintenanceType, time.Now(), "gRPC Engine Started ...", nil))
 	}
 
 	m.isStarted = true
