@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/abolfazlbeh/zhycan/internal/config"
+	"github.com/abolfazlbeh/zhycan/internal/http/types"
 	"github.com/abolfazlbeh/zhycan/internal/utils"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/favicon"
@@ -16,18 +17,33 @@ import (
 // Mark: Definitions
 
 // Server struct
-type Server struct {
+type FiberServer struct {
 	name                  string
-	config                ServerConfig
+	config                types.ServerConfig
 	app                   *fiber.App
 	versionGroups         map[string]fiber.Router
 	groups                map[string]fiber.Router
 	supportedMiddlewares  []string
 	defaultRequestMethods []string
+
+	predefinedGroups []struct {
+		name       string
+		f          func(c *fiber.Ctx) error
+		groupNames []string
+	}
+
+	predefinedRoutes []struct {
+		method    string
+		path      string
+		f         []func(c *fiber.Ctx) error
+		routeName string
+		versions  []string
+		groups    []string
+	}
 }
 
 // init - Server Constructor - It initializes the server
-func (s *Server) init(name string, serverConfig ServerConfig) error {
+func (s *FiberServer) init(name string, serverConfig types.ServerConfig, rawConfig map[string]interface{}) error {
 	s.name = name
 	s.config = serverConfig
 
@@ -57,28 +73,52 @@ func (s *Server) init(name string, serverConfig ServerConfig) error {
 		"logger",
 		"favicon",
 	}
+
+	// get middleware objects and pass it to the attachMiddlewares function
+	if v, ok := rawConfig["middlewares"].(map[string]interface{}); ok {
+		s.attachMiddlewares(serverConfig.Middlewares.Order, v)
+	}
+
+	s.createVersionGroups(serverConfig.Versions)
+
+	// if predefined before and just restarting
+	if len(s.predefinedGroups) > 0 {
+		for _, item := range s.predefinedGroups {
+			s.AddGroup(item.name, item.f, item.groupNames...)
+		}
+	}
+
+	if len(s.predefinedRoutes) > 0 {
+		for _, item := range s.predefinedRoutes {
+			if len(item.f) > 1 {
+				s.AddRouteWithMultiHandlers(item.method, item.path, item.f, item.routeName, item.versions, item.groups)
+			} else {
+				s.AddRoute(item.method, item.path, item.f[0], item.routeName, item.versions, item.groups)
+			}
+		}
+	}
+
 	return nil
 }
 
-func (s *Server) createVersionGroups(versions []string) {
+func (s *FiberServer) createVersionGroups(versions []string) {
 	s.versionGroups = make(map[string]fiber.Router)
 	for _, item := range versions {
 		s.versionGroups[item] = s.app.Group(item)
 	}
 }
 
-func (s *Server) attachMiddlewares(orders []string) {
+func (s *FiberServer) attachMiddlewares(orders []string, rawConfig map[string]interface{}) {
 	for _, item := range orders {
 		if utils.ArrayContains(&s.supportedMiddlewares, item) {
 			switch item {
 			case "logger":
-				key := fmt.Sprintf("middlewares.%s", item)
+				//key := fmt.Sprintf("middlewares.%s", item)
 				// read config
-				loggerCfg, err := config.GetManager().Get(s.name, key)
-				if err == nil {
-					jsonBody, err2 := json.Marshal(loggerCfg.(interface{}))
+				if loggerCfg, ok := rawConfig[item].(map[string]interface{}); ok {
+					jsonBody, err2 := json.Marshal(loggerCfg)
 					if err2 == nil {
-						var obj LoggerMiddlewareConfig
+						var obj types.LoggerMiddlewareConfig
 						err := json.Unmarshal(jsonBody, &obj)
 						if err == nil {
 							// Everything is ok and let's go define logger config
@@ -97,17 +137,17 @@ func (s *Server) attachMiddlewares(orders []string) {
 							break
 						}
 					}
+				} else {
+					s.app.Use(logger.New())
+					break
 				}
-				s.app.Use(logger.New())
-
 			case "favicon":
-				key := fmt.Sprintf("middlewares.%s", item)
+				//key := fmt.Sprintf("middlewares.%s", item)
 				// read config
-				loggerCfg, err := config.GetManager().Get(s.name, key)
-				if err == nil {
-					jsonBody, err2 := json.Marshal(loggerCfg.(interface{}))
+				if loggerCfg, ok := rawConfig[item].(map[string]interface{}); ok {
+					jsonBody, err2 := json.Marshal(loggerCfg)
 					if err2 == nil {
-						var obj FaviconMiddlewareConfig
+						var obj types.FaviconMiddlewareConfig
 						err := json.Unmarshal(jsonBody, &obj)
 						if err != nil {
 							faviconMiddlewareCfg := favicon.Config{
@@ -119,14 +159,18 @@ func (s *Server) attachMiddlewares(orders []string) {
 							break
 						}
 					}
+				} else {
+					s.app.Use(favicon.New())
+					break
 				}
-				s.app.Use(favicon.New())
 			}
 		}
 	}
+
+	fmt.Println(s.app)
 }
 
-func (s *Server) addGroup(keyName string, groupName string, router fiber.Router, f func(c *fiber.Ctx) error) {
+func (s *FiberServer) addGroup(keyName string, groupName string, router fiber.Router, f func(c *fiber.Ctx) error) {
 	if f == nil {
 		s.groups[keyName] = router.Group(groupName)
 	} else {
@@ -134,27 +178,33 @@ func (s *Server) addGroup(keyName string, groupName string, router fiber.Router,
 	}
 }
 
-func (s *Server) setupStatic() {
+func (s *FiberServer) setupStatic() {
 	s.app.Static(s.config.Static.Prefix, s.config.Static.Root, s.config.Static.Config)
 }
 
 // MARK: Public functions
 
 // NewServer - create a new instance of Server and return it
-func NewServer(name string, config ServerConfig) (*Server, error) {
-	server := &Server{}
-	err := server.init(name, config)
+func NewServer(name string, config types.ServerConfig, rawConfig map[string]interface{}) (*FiberServer, error) {
+	server := &FiberServer{}
+	err := server.init(name, config, rawConfig)
 	if err != nil {
 		return nil, NewCreateServerErr(err)
 	}
-
-	server.attachMiddlewares(config.Middlewares.Order)
-	server.createVersionGroups(config.Versions)
 	return server, nil
 }
 
+func (s *FiberServer) UpdateConfigs(config types.ServerConfig, rawConfig map[string]interface{}) error {
+	err := s.init(s.name, config, rawConfig)
+	if err != nil {
+		return NewUpdateServerConfigErr(err)
+	}
+
+	return nil
+}
+
 // Start - start the server and listen to provided address
-func (s *Server) Start() error {
+func (s *FiberServer) Start() error {
 	err := s.app.Listen(s.config.ListenAddress)
 	if err != nil {
 		return NewStartServerErr(s.config.ListenAddress, err)
@@ -163,7 +213,7 @@ func (s *Server) Start() error {
 }
 
 // Stop - stop the server
-func (s *Server) Stop() error {
+func (s *FiberServer) Stop() error {
 	err := s.app.Shutdown()
 	if err != nil {
 		return NewShutdownServerErr(err)
@@ -172,14 +222,23 @@ func (s *Server) Stop() error {
 }
 
 // AttachErrorHandler - attach a custom error handler to the server
-func (s *Server) AttachErrorHandler(f func(ctx *fiber.Ctx, err error) error) {
+func (s *FiberServer) AttachErrorHandler(f func(ctx *fiber.Ctx, err error) error) {
 	oldConfig := s.app.Config()
 	oldConfig.ErrorHandler = f
 	s.app = fiber.New(oldConfig)
 }
 
 // AddRoute - add a route to the server
-func (s *Server) AddRoute(method string, path string, f func(c *fiber.Ctx) error, routeName string, versions []string, groups []string) error {
+func (s *FiberServer) AddRoute(method string, path string, f func(c *fiber.Ctx) error, routeName string, versions []string, groups []string) error {
+	s.predefinedRoutes = append(s.predefinedRoutes, struct {
+		method    string
+		path      string
+		f         []func(c *fiber.Ctx) error
+		routeName string
+		versions  []string
+		groups    []string
+	}{method: method, path: path, f: []func(c *fiber.Ctx) error{f}, routeName: routeName, versions: versions, groups: groups})
+
 	// check that whether is acceptable to add this route method
 	if utils.ArrayContains(&s.defaultRequestMethods, method) {
 		groupsExist := false
@@ -285,7 +344,12 @@ func (s *Server) AddRoute(method string, path string, f func(c *fiber.Ctx) error
 }
 
 // AddGroup - add a group to the server
-func (s *Server) AddGroup(groupName string, f func(c *fiber.Ctx) error, groups ...string) error {
+func (s *FiberServer) AddGroup(groupName string, f func(c *fiber.Ctx) error, groups ...string) error {
+	s.predefinedGroups = append(s.predefinedGroups, struct {
+		name       string
+		f          func(c *fiber.Ctx) error
+		groupNames []string
+	}{name: groupName, f: f, groupNames: groups})
 	if len(groups) > 0 {
 		for _, g := range groups {
 			for key := range s.versionGroups {
@@ -313,17 +377,17 @@ func (s *Server) AddGroup(groupName string, f func(c *fiber.Ctx) error, groups .
 	return nil
 }
 
-// GetRouteByName _ get route by its name
-func (s *Server) GetRouteByName(name string) (*fiber.Route, error) {
-	route := s.app.GetRoute(name)
-	if route.Name != name {
-		return nil, NewGetRouteByNameErr(name)
-	}
-	return &route, nil
-}
-
 // AddRouteWithMultiHandlers - add a route to the server
-func (s *Server) AddRouteWithMultiHandlers(method string, path string, f []func(c *fiber.Ctx) error, routeName string, versions []string, groups []string) error {
+func (s *FiberServer) AddRouteWithMultiHandlers(method string, path string, f []func(c *fiber.Ctx) error, routeName string, versions []string, groups []string) error {
+	s.predefinedRoutes = append(s.predefinedRoutes, struct {
+		method    string
+		path      string
+		f         []func(c *fiber.Ctx) error
+		routeName string
+		versions  []string
+		groups    []string
+	}{method: method, path: path, f: f, routeName: routeName, versions: versions, groups: groups})
+
 	// check that whether is acceptable to add this route method
 	if utils.ArrayContains(&s.defaultRequestMethods, method) {
 		if len(groups) > 0 {
@@ -414,7 +478,16 @@ func (s *Server) AddRouteWithMultiHandlers(method string, path string, f []func(
 	return NewNotSupportedHttpMethodErr(method)
 }
 
+// GetRouteByName _ get route by its name
+func (s *FiberServer) GetRouteByName(name string) (*fiber.Route, error) {
+	route := s.app.GetRoute(name)
+	if route.Name != name {
+		return nil, NewGetRouteByNameErr(name)
+	}
+	return &route, nil
+}
+
 // GetAllRoutes - Get all Routes
-func (s *Server) GetAllRoutes() []fiber.Route {
+func (s *FiberServer) GetAllRoutes() []fiber.Route {
 	return s.app.GetRoutes(true)
 }

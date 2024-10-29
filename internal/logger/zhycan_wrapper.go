@@ -3,19 +3,26 @@ package logger
 // Imports needed list
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/abolfazlbeh/zhycan/internal/config"
+	"github.com/abolfazlbeh/zhycan/internal/logger/types"
 	"github.com/abolfazlbeh/zhycan/internal/utils"
+	"gorm.io/gorm"
 	"log"
 	"os"
 	"sync"
 	"time"
+
+	"github.com/abolfazlbeh/zhycan/internal/logger/helpers"
 )
 
 type OutputOption struct {
-	LevelStr string      `json:"level"`
-	Level    LogLevel    `json:"-"`
-	Path     string      `json:"path,omitempty"`
-	l        *log.Logger `json:"-"`
+	LevelStr      string         `json:"level"`
+	Level         types.LogLevel `json:"-"`
+	Path          string         `json:"path,omitempty"`
+	l             *log.Logger    `json:"-"`
+	sqlDbInstance *gorm.DB       `json:"-"`
+	dbType        string         `json:"-"`
 }
 
 // MARK: LogMeWrapper
@@ -24,7 +31,7 @@ type OutputOption struct {
 type LogMeWrapper struct {
 	name                  string
 	serviceName           string
-	ch                    chan LogObject
+	ch                    chan types.LogObject
 	initialized           bool
 	wg                    sync.WaitGroup
 	operationType         string
@@ -40,7 +47,7 @@ func (l *LogMeWrapper) Constructor(name string) error {
 	l.name = name
 	l.serviceName = config.GetManager().GetName()
 	l.operationType = config.GetManager().GetOperationType()
-	l.supportedOutput = []string{"console", "file"}
+	l.supportedOutput = []string{"console", "file", "db"}
 	l.initialized = false
 
 	channelSize, err := config.GetManager().Get(l.name, "channel_size")
@@ -68,7 +75,7 @@ func (l *LogMeWrapper) Constructor(name string) error {
 		outputArray = append(outputArray, v.(string))
 	}
 
-	l.ch = make(chan LogObject, int(channelSize.(float64)))
+	l.ch = make(chan types.LogObject, int(channelSize.(float64)))
 
 	//if l.operationType == "prod" {
 	//} else {
@@ -80,14 +87,43 @@ func (l *LogMeWrapper) Constructor(name string) error {
 			if configReadErr == nil {
 				r := OutputOption{}
 
-				jsonStr, jsonErr := json.Marshal(jsonObj.(map[string]interface{}))
+				jsonMap := jsonObj.(map[string]interface{})
+				jsonStr, jsonErr := json.Marshal(jsonMap)
 				if jsonErr == nil {
 					jsonErr = json.Unmarshal(jsonStr, &r)
 					if jsonErr == nil {
 						// add it to internal map
-						r.Level = StringToLogLevel(r.LevelStr)
+						r.Level = types.StringToLogLevel(r.LevelStr)
 						if item == "console" {
 							r.l = log.New(os.Stdout, "", 0)
+						} else if item == "db" {
+							useDbName := ""
+							dbType := ""
+							if v, ok := jsonMap["use"]; ok {
+								useDbName = v.(string)
+							}
+							if v, ok := jsonMap["type"]; ok {
+								dbType = v.(string)
+							}
+
+							if useDbName != "" && dbType != "" {
+								if dbType == "sql" {
+									r.dbType = dbType
+
+									insDb, err := helpers.GetSqlDbInstance("server1")
+									if err != nil {
+										log.Printf("Cannot Db instance: %v for logger", item)
+									} else {
+										r.sqlDbInstance = insDb
+										if r.sqlDbInstance != nil {
+											err := r.sqlDbInstance.AutoMigrate(&types.ZhycanLog{})
+											if err != nil {
+												log.Printf("Cannot migrate the `ZhycanLog` table")
+											}
+										}
+									}
+								}
+							}
 						}
 						l.supportedOutputOption[item] = r
 
@@ -118,10 +154,10 @@ func (l *LogMeWrapper) IsInitialized() bool {
 }
 
 // Log - write log object to the channel
-func (l *LogMeWrapper) Log(obj *LogObject) {
+func (l *LogMeWrapper) Log(obj *types.LogObject) {
 	l.wg.Wait()
 
-	go func(obj *LogObject) {
+	go func(obj *types.LogObject) {
 		l.ch <- *obj
 	}(obj)
 }
@@ -155,22 +191,40 @@ func (l *LogMeWrapper) runner(output string) {
 	l.wg.Wait()
 	for c := range l.ch {
 		if c.Level <= l.supportedOutputOption[output].Level {
-			switch c.Level {
-			case DEBUG:
-				l.debug(&c, output)
-			case INFO:
-				l.info(&c, output)
-			case WARNING:
-				l.info(&c, output)
-			case ERROR:
-				l.info(&c, output)
+			if output == "console" {
+				switch c.Level {
+				case types.DEBUG:
+					l.debug(&c, output)
+				case types.INFO:
+					l.info(&c, output)
+				case types.WARNING:
+					l.info(&c, output)
+				case types.ERROR:
+					l.info(&c, output)
+				}
+			} else if output == "db" {
+				if l.supportedOutputOption[output].dbType == "sql" {
+					if l.supportedOutputOption[output].sqlDbInstance != nil {
+						item := types.ZhycanLog{
+							Model:       gorm.Model{},
+							ServiceName: l.serviceName,
+							Level:       c.Level.String(),
+							LogType:     c.LogType,
+							Module:      c.Module,
+							Message:     fmt.Sprintf("%v", c.Message),
+							Additional:  fmt.Sprintf("%v", c.Additional),
+							LogTime:     c.Time,
+						}
+						l.supportedOutputOption[output].sqlDbInstance.Create(&item)
+					}
+				}
 			}
 		}
 	}
 }
 
 // debug - log with DEBUG level
-func (l *LogMeWrapper) debug(object *LogObject, output string) {
+func (l *LogMeWrapper) debug(object *types.LogObject, output string) {
 	if output == "console" {
 		l.supportedOutputOption[output].l.Printf(
 			"\\e[37m%v %v >>> %7v >>> (%v/%v)  - %v ... %v\\e[0m\n",
@@ -179,14 +233,14 @@ func (l *LogMeWrapper) debug(object *LogObject, output string) {
 			object.Level.String(),
 			object.LogType,
 			object.Module,
-			object.Module,
+			object.Message,
 			object.Additional,
 		)
 	}
 }
 
 // info - log with INFO level
-func (l *LogMeWrapper) info(object *LogObject, output string) {
+func (l *LogMeWrapper) info(object *types.LogObject, output string) {
 	if output == "console" {
 		l.supportedOutputOption[output].l.Printf(
 			"\\e[32m%v %v >>> %7v >>> (%v/%v)  - %v ... %v\\e[0m\n",
@@ -195,14 +249,14 @@ func (l *LogMeWrapper) info(object *LogObject, output string) {
 			object.Level.String(),
 			object.LogType,
 			object.Module,
-			object.Module,
+			object.Message,
 			object.Additional,
 		)
 	}
 }
 
 // warning - log with WARNING level
-func (l *LogMeWrapper) warning(object *LogObject, output string) {
+func (l *LogMeWrapper) warning(object *types.LogObject, output string) {
 	if output == "console" {
 		l.supportedOutputOption[output].l.Printf(
 			"\\e[33m%v %v >>> %7v >>> (%v/%v)  - %v ... %v\\e[0m\n",
@@ -211,14 +265,14 @@ func (l *LogMeWrapper) warning(object *LogObject, output string) {
 			object.Level.String(),
 			object.LogType,
 			object.Module,
-			object.Module,
+			object.Message,
 			object.Additional,
 		)
 	}
 }
 
 // error - log with ERROR level
-func (l *LogMeWrapper) error(object *LogObject, output string) {
+func (l *LogMeWrapper) error(object *types.LogObject, output string) {
 	if output == "console" {
 		l.supportedOutputOption[output].l.Printf(
 			"\\e[31m%v %v >>> %7v >>> (%v/%v)  - %v ... %v\\e[0m\n",
@@ -227,7 +281,7 @@ func (l *LogMeWrapper) error(object *LogObject, output string) {
 			object.Level.String(),
 			object.LogType,
 			object.Module,
-			object.Module,
+			object.Message,
 			object.Additional,
 		)
 	}

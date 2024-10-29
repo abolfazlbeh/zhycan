@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/abolfazlbeh/zhycan/internal/config"
+	"github.com/abolfazlbeh/zhycan/internal/db/extensions"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"strings"
@@ -121,12 +122,12 @@ func (m *MongoWrapper) makeUri() string {
 // MARK: Public functions
 
 // GetDb - return associated internal Db
-func (m *MongoWrapper) GetDb() (*mongo.Client, error) {
+func (m *MongoWrapper) GetDb() (*mongo.Database, error) {
 	if m.databaseInstance == nil {
 		uri := m.makeUri()
 
 		// Configure Logger Options
-		loggerOptions := options.Logger().SetSink(&MongoLogger{}).SetMaxDocumentLength(uint(m.config.LoggerConfig.MaxDocumentLength))
+		loggerOptions := options.Logger().SetSink(&extensions.MongoLogger{}).SetMaxDocumentLength(uint(m.config.LoggerConfig.MaxDocumentLength))
 		switch m.config.LoggerConfig.ComponentConnection {
 		case "info":
 			loggerOptions = loggerOptions.SetComponentLevel(options.LogComponentConnection, options.LogLevelInfo)
@@ -155,7 +156,8 @@ func (m *MongoWrapper) GetDb() (*mongo.Client, error) {
 		m.databaseInstance = db
 	}
 
-	return m.databaseInstance, nil
+	actualDb := m.databaseInstance.Database(m.config.DatabaseName, nil)
+	return actualDb, nil
 }
 
 // NewMongoWrapper - create a new instance of MongoWrapper and returns it

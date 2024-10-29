@@ -2,6 +2,7 @@ package db
 
 import (
 	"github.com/abolfazlbeh/zhycan/internal/db"
+	"github.com/abolfazlbeh/zhycan/internal/logger"
 	"go.mongodb.org/mongo-driver/mongo"
 	"gorm.io/gorm"
 )
@@ -22,6 +23,12 @@ func AttachMigrationFunc(instanceName string, f func(migrator gorm.Migrator) err
 }
 
 // GetMongoDb - Get *mongo.Client instance from the underlying interfaces
-func GetMongoDb(instanceName string) (*mongo.Client, error) {
+func GetMongoDb(instanceName string) (*mongo.Database, error) {
 	return db.GetManager().GetMongoDb(instanceName)
+}
+
+// SetupManager - Setup manager
+func SetupManager() {
+	l, _ := logger.GetManager().GetLogger()
+	db.GetManager().RegisterLogger(l)
 }

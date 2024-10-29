@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"github.com/abolfazlbeh/zhycan/internal/config"
+	"github.com/abolfazlbeh/zhycan/internal/logger/types"
 	"os"
 	"testing"
 	"time"
@@ -29,8 +30,8 @@ func Test_ZapFileLogger(t *testing.T) {
 	expectedM := "TEST"
 	expectedL := "\\u001b[35mDEBUG\\u001b[0m"
 
-	logg.Log(NewLogObject(
-		DEBUG, "tester", FuncMaintenanceType, time.Now().UTC(), "TEST", nil))
+	logg.Log(types.NewLogObject(
+		types.DEBUG, "tester", types.FuncMaintenanceType, time.Now().UTC(), "TEST", nil))
 	logg.Sync()
 
 	// read a log file to ensure it writes ok --> for now it must be written to /tmp folder

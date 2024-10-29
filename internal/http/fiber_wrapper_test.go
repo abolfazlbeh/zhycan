@@ -3,6 +3,7 @@ package http
 import (
 	"errors"
 	"fmt"
+	"github.com/abolfazlbeh/zhycan/internal/http/types"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/utils"
 	"io"
@@ -15,7 +16,7 @@ import (
 func TestFiberWrapper_startServer(t *testing.T) {
 	// create a new fiber wrapper and start it
 
-	serverConfig := ServerConfig{ListenAddress: ":3000"}
+	serverConfig := types.ServerConfig{ListenAddress: ":3000"}
 	server, err := NewServer("http", serverConfig)
 	if err != nil {
 		t.Errorf("Creating HTTP Server --> Expected: %v, but got %v", nil, err)
@@ -30,7 +31,7 @@ func TestFiberWrapper_startServer(t *testing.T) {
 }
 
 func TestFiberWrapper_AddRoute(t *testing.T) {
-	serverConfig := ServerConfig{ListenAddress: ":3000"}
+	serverConfig := types.ServerConfig{ListenAddress: ":3000"}
 	server, err := NewServer("http", serverConfig)
 	if err != nil {
 		t.Errorf("Creating HTTP Server --> Expected: %v, but got %v", nil, err)
@@ -60,7 +61,7 @@ func TestFiberWrapper_AddRoute(t *testing.T) {
 }
 
 func TestFiberWrapper_AddMultipleRoute(t *testing.T) {
-	serverConfig := ServerConfig{ListenAddress: ":3000"}
+	serverConfig := types.ServerConfig{ListenAddress: ":3000"}
 	server, err := NewServer("http", serverConfig)
 	if err != nil {
 		t.Errorf("Creating HTTP Server --> Expected: %v, but got %v", nil, err)
@@ -95,7 +96,7 @@ func TestFiberWrapper_AddMultipleRoute(t *testing.T) {
 }
 
 func TestFiberWrapper_AddBlockRouteMethod(t *testing.T) {
-	serverConfig := ServerConfig{ListenAddress: ":3000"}
+	serverConfig := types.ServerConfig{ListenAddress: ":3000"}
 	server, err := NewServer("http", serverConfig)
 	if err != nil {
 		t.Errorf("Creating HTTP Server --> Expected: %v, but got %v", nil, err)
@@ -114,7 +115,7 @@ func TestFiberWrapper_AddBlockRouteMethod(t *testing.T) {
 }
 
 func TestFiberWrapper_GetRouteByName(t *testing.T) {
-	serverConfig := ServerConfig{ListenAddress: ":3000"}
+	serverConfig := types.ServerConfig{ListenAddress: ":3000"}
 	server, err := NewServer("http", serverConfig)
 	if err != nil {
 		t.Errorf("Creating HTTP Server --> Expected: %v, but got %v", nil, err)
@@ -145,7 +146,7 @@ func TestFiberWrapper_GetRouteByName(t *testing.T) {
 }
 
 func TestFiberWrapper_AddRouteToOneSupportedVersion(t *testing.T) {
-	serverConfig := ServerConfig{ListenAddress: ":3000", Versions: []string{"v1"}}
+	serverConfig := types.ServerConfig{ListenAddress: ":3000", Versions: []string{"v1"}}
 	server, err := NewServer("http", serverConfig)
 	if err != nil {
 		t.Errorf("Creating HTTP Server --> Expected: %v, but got %v", nil, err)
@@ -171,7 +172,7 @@ func TestFiberWrapper_AddRouteToOneSupportedVersion(t *testing.T) {
 }
 
 func TestFiberWrapper_AddRouteToTwoSupportedVersions(t *testing.T) {
-	serverConfig := ServerConfig{ListenAddress: ":3000", Versions: []string{"v1", "v2"}}
+	serverConfig := types.ServerConfig{ListenAddress: ":3000", Versions: []string{"v1", "v2"}}
 	server, err := NewServer("http", serverConfig)
 	if err != nil {
 		t.Errorf("Creating HTTP Server --> Expected: %v, but got %v", nil, err)
@@ -201,7 +202,7 @@ func TestFiberWrapper_AddRouteToTwoSupportedVersions(t *testing.T) {
 }
 
 func TestFiberWrapper_AddRouteToAllVersions(t *testing.T) {
-	serverConfig := ServerConfig{ListenAddress: ":3000", Versions: []string{"v1", "v2"}}
+	serverConfig := types.ServerConfig{ListenAddress: ":3000", Versions: []string{"v1", "v2"}}
 	server, err := NewServer("http", serverConfig)
 	if err != nil {
 		t.Errorf("Creating HTTP Server --> Expected: %v, but got %v", nil, err)
@@ -231,7 +232,7 @@ func TestFiberWrapper_AddRouteToAllVersions(t *testing.T) {
 }
 
 func TestFiberWrapper_AddRouteToNoVersions(t *testing.T) {
-	serverConfig := ServerConfig{ListenAddress: ":3000", Versions: []string{"v1", "v2"}}
+	serverConfig := types.ServerConfig{ListenAddress: ":3000", Versions: []string{"v1", "v2"}}
 	server, err := NewServer("http", serverConfig)
 	if err != nil {
 		t.Errorf("Creating HTTP Server --> Expected: %v, but got %v", nil, err)
@@ -261,7 +262,7 @@ func TestFiberWrapper_AddRouteToNoVersions(t *testing.T) {
 }
 
 func TestFiberWrapper_AddGroup(t *testing.T) {
-	serverConfig := ServerConfig{ListenAddress: ":3000", Versions: []string{"v1", "v2"}}
+	serverConfig := types.ServerConfig{ListenAddress: ":3000", Versions: []string{"v1", "v2"}}
 	server, err := NewServer("http", serverConfig)
 	if err != nil {
 		t.Errorf("Creating HTTP Server --> Expected: %v, but got %v", nil, err)
@@ -286,7 +287,7 @@ func TestFiberWrapper_AddGroup(t *testing.T) {
 }
 
 func TestFiberWrapper_AddGroupToGroup(t *testing.T) {
-	serverConfig := ServerConfig{ListenAddress: ":3000", Versions: []string{"v1", "v2"}}
+	serverConfig := types.ServerConfig{ListenAddress: ":3000", Versions: []string{"v1", "v2"}}
 	server, err := NewServer("http", serverConfig)
 	if err != nil {
 		t.Errorf("Creating HTTP Server --> Expected: %v, but got %v", nil, err)
@@ -316,7 +317,7 @@ func TestFiberWrapper_AddGroupToGroup(t *testing.T) {
 }
 
 func TestFiberWrapper_AddRouteToSpecificGroup(t *testing.T) {
-	serverConfig := ServerConfig{ListenAddress: ":3000", Versions: []string{"v1", "v2"}}
+	serverConfig := types.ServerConfig{ListenAddress: ":3000", Versions: []string{"v1", "v2"}}
 	server, err := NewServer("http", serverConfig)
 	if err != nil {
 		t.Errorf("Creating HTTP Server --> Expected: %v, but got %v", nil, err)
@@ -345,7 +346,7 @@ func TestFiberWrapper_AddRouteToSpecificGroup(t *testing.T) {
 }
 
 func TestFiberWrapper_RequestMethodsNotAllowed(t *testing.T) {
-	serverConfig := ServerConfig{
+	serverConfig := types.ServerConfig{
 		ListenAddress: ":3000",
 		Config: struct {
 			ServerHeader         string   `json:"server_header"`
@@ -404,7 +405,7 @@ func TestFiberWrapper_RequestMethodsNotAllowed(t *testing.T) {
 }
 
 func TestFiberWrapper_RequestMethodsFilter(t *testing.T) {
-	serverConfig := ServerConfig{
+	serverConfig := types.ServerConfig{
 		ListenAddress: ":3000",
 		Config: struct {
 			ServerHeader         string   `json:"server_header"`
@@ -477,7 +478,7 @@ func TestFiberWrapper_RequestMethodsFilter(t *testing.T) {
 }
 
 func TestFiberWrapper_StaticHandling(t *testing.T) {
-	serverConfig := ServerConfig{
+	serverConfig := types.ServerConfig{
 		ListenAddress: ":3000",
 		SupportStatic: true,
 		Static: struct {
@@ -517,7 +518,7 @@ func TestFiberWrapper_StaticHandling(t *testing.T) {
 }
 
 func TestFiberWrapper_AddRouteWithMultipleHandler(t *testing.T) {
-	serverConfig := ServerConfig{ListenAddress: ":3000"}
+	serverConfig := types.ServerConfig{ListenAddress: ":3000"}
 	server, err := NewServer("http", serverConfig)
 	if err != nil {
 		t.Errorf("Creating HTTP Server --> Expected: %v, but got %v", nil, err)
@@ -548,7 +549,7 @@ func TestFiberWrapper_AddRouteWithMultipleHandler(t *testing.T) {
 }
 
 func TestFiberWrapper_CustomErrorHandler(t *testing.T) {
-	serverConfig := ServerConfig{ListenAddress: ":3000"}
+	serverConfig := types.ServerConfig{ListenAddress: ":3000"}
 	server, err := NewServer("http", serverConfig)
 	if err != nil {
 		t.Errorf("Creating HTTP Server --> Expected: %v, but got %v", nil, err)

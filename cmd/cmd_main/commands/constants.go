@@ -111,8 +111,7 @@ package commands
 
 import (
 	"github.com/spf13/cobra"
-	"github.com/abolfazlbeh/zhycan/pkg/cli"
-	{{.ProjectName}}/app/app"
+	"github.com/abolfazlbeh/zhycan/pkg/command"
 	"os"
 )
 
@@ -126,12 +125,6 @@ examples and usage of using your application. For example:
 Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.""",
-	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		if cmd.Use == "runserver" {
-			app1 := &app.App{}
-			app1.Init()
-		}
-	},
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -156,7 +149,7 @@ func init() {
 	//rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 
     // Attach Default Zhycan Cli Commands
-    cli.AttachCommands(rootCmd)
+    command.AttachCommands(rootCmd)
 
 	// MARK:Commands --- And New Commands Below ---
 	// rootCmd.AddCommand(NewInitCmd())
@@ -344,92 +337,6 @@ DerivedData/
   ]
 }`
 
-	dbConfigTmpl = `{
-  "connections": ["server1"],
-  "server1": {
-    "type": "sqlite",
-    "db": "file.db",
-    "options": {
-      "_fk": "1"
-    },
-    "config": {
-      "skip_default_transaction": false,
-      "dry_run": false,
-      "prepare_stmt": true,
-      "disable_automatic_ping": false,
-      "disable_foreign_key_constraint_when_migrating": false,
-      "ignore_relationships_when_migrating": false,
-      "disable_nested_transaction": false
-    },
-    "logger": {
-      "slow_threshold": 1000,
-      "ignore_record_not_found_error": false,
-      "parameterized_queries": false,
-      "log_level": "debug"
-    }
-  },
-  "server2": {
-    "type": "mysql",
-    "db": "databasename",
-    "username": "username",
-    "password": "password",
-    "host": "127.0.0.1",
-    "port": "3306",
-    "protocol": "tcp",
-    "options": {
-      "charset": "utf8mb4",
-      "parseTime": "True",
-      "loc": "Local"
-    },
-    "specific_config": {
-      "default_string_size": 256,
-      "disable_datetime_precision": true,
-      "support_rename_index": true,
-      "support_rename_column": true,
-      "skip_initialize_with_version": false,
-      "disable_with_returning": false,
-      "support_for_share_clause": false,
-      "support_null_as_default_value": false,
-      "support_rename_column_unique": false,
-      "default_datetime_precision": 3
-    }
-  },
-  "server3": {
-    "type": "postgresql",
-    "db": "option_trading",
-    "username": "username",
-    "password": "password",
-    "host": "127.0.0.1",
-    "port": "3306",
-    "options": {
-      "sslmode": "disable",
-      "TimeZone": "Asia/Tehran"
-    },
-    "specific_config": {
-      "prefer_simple_protocol": true,
-      "without_returning": false
-    }
-  },
-  "server4": {
-    "type": "mongodb",
-    "db": "",
-    "username": "username",
-    "password": "password",
-    "host": "127.0.0.1",
-    "port": "27017",
-    "options": {
-      "maxPoolSize": "100",
-      "w": "majority",
-      "connectTimeoutMS": "30000"
-    },
-    "logger": {
-      "component_command": "debug",
-      "component_connection": "info",
-      "max_document_length": 1000
-    }
-  }
-}`
-
 	appControllerTmpl = `/*
 Create By Zhycan Framework
 
@@ -450,11 +357,6 @@ import (
 
 // SampleController - a sample controller to show the functionality
 type SampleController struct {}
-
-// GetName - Get name of the controller, you can return empty string if you want
-func (s *SampleController) GetName() string {
-	return "Sample"
-}
 
 // Routes - returning controller specific routes to be registered
 func (ctrl *SampleController) Routes() []http.HttpRoute {
@@ -486,11 +388,6 @@ File: "app/app.go" --> {{ .Time.Format .TimeFormat }} by {{.CreatorUserName}}
 
 package app
 
-import (
-    "github.com/abolfazlbeh/zhycan/pkg/engine"
-    "github.com/abolfazlbeh/zhycan/pkg/http"
-)
-
 // MARK: App Engine
 
 // App - application engine structure that must satisfy one of the engine interface such as 'engine.RestfulApp', ...
@@ -498,13 +395,11 @@ type App struct {}
 
 // Init - initialize the app
 func (app *App) Init() {
-    err := engine.RegisterRestfulController(&SampleController{})
+    err := engine.RegisterRestfulController(&SampleController{Name: "sample"})
     if err != nil {
         logger.Log(logger.NewLogObject(
             logger.ERROR, "App.Init", logger.FuncMaintenanceType, time.Now().UTC(), "Cannot Register Restful Controller", err))
     }
-
-    http.PrintAllRoutes()
 }
 `
 

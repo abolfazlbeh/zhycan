@@ -2,33 +2,34 @@ package logger
 
 import (
 	"github.com/abolfazlbeh/zhycan/internal/logger"
+	"github.com/abolfazlbeh/zhycan/internal/logger/types"
 	"time"
 )
 
 type LogError logger.Error
-type LogObject logger.LogObject
-type LogLevel logger.LogLevel
-type LogType logger.LogType
+type LogObject types.LogObject
+type LogLevel types.LogLevel
+type LogType types.LogType
 
 // Some Constants - used with LogLevel
 const (
-	DEBUG   LogLevel = LogLevel(logger.DEBUG)
-	INFO    LogLevel = LogLevel(logger.INFO)
-	WARNING LogLevel = LogLevel(logger.WARNING)
-	ERROR   LogLevel = LogLevel(logger.ERROR)
+	DEBUG   LogLevel = LogLevel(types.DEBUG)
+	INFO    LogLevel = LogLevel(types.INFO)
+	WARNING LogLevel = LogLevel(types.WARNING)
+	ERROR   LogLevel = LogLevel(types.ERROR)
 )
 
 var (
-	FuncMaintenanceType LogType = LogType(logger.NewLogType(logger.FuncMaintenanceType.String()))
-	DebugType           LogType = LogType(logger.NewLogType(logger.DebugType.String()))
+	FuncMaintenanceType LogType = LogType(types.NewLogType(types.FuncMaintenanceType.String()))
+	DebugType           LogType = LogType(types.NewLogType(types.DebugType.String()))
 )
 
 // NewLogObject - enhance method to create and return reference of LogObject
 func NewLogObject(level LogLevel, module string, logType LogType, eventTime time.Time, message interface{}, additional interface{}) *LogObject {
 	return &LogObject{
-		Level:      logger.LogLevel(level),
+		Level:      types.LogLevel(level),
 		Module:     module,
-		LogType:    logger.LogType(logType).String(),
+		LogType:    types.LogType(logType).String(),
 		Time:       eventTime.UTC().UnixNano(),
 		Message:    message,
 		Additional: additional,
@@ -40,7 +41,7 @@ func Log(object *LogObject) *LogError {
 	l, err := logger.GetManager().GetLogger()
 	if err == nil {
 		if l.IsInitialized() {
-			p := logger.LogObject(*object)
+			p := types.LogObject(*object)
 			l.Log(&p)
 		}
 		return nil

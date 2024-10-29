@@ -20,11 +20,6 @@ import (
 // SampleController - a sample controller to show the functionality
 type SampleController struct {}
 
-// GetName - Get name of the controller, you can return empty string if you want
-func (s *SampleController) GetName() string {
-	return "Sample"
-}
-
 // Routes - returning controller specific routes to be registered
 func (ctrl *SampleController) Routes() []http.HttpRoute {
     return []http.HttpRoute {
