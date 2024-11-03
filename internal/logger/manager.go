@@ -3,6 +3,7 @@ package logger
 // Imports needed list
 import (
 	"github.com/abolfazlbeh/zhycan/internal/config"
+	"github.com/abolfazlbeh/zhycan/internal/logger/types"
 	"log"
 	"sync"
 )
@@ -12,7 +13,7 @@ import (
 // Manager object
 type manager struct {
 	name   string
-	logger Logger
+	logger types.Logger
 	lock   sync.Mutex
 }
 
@@ -68,7 +69,7 @@ func GetManager() *manager {
 }
 
 // GetLogger - This function returns logger instance
-func (m *manager) GetLogger() (Logger, *Error) {
+func (m *manager) GetLogger() (types.Logger, *Error) {
 	m.lock.Lock()
 	defer m.lock.Unlock()
 

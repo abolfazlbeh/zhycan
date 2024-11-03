@@ -31,8 +31,11 @@ type MysqlSpecificConfig struct {
 }
 
 type PostgresqlSpecificConfig struct {
-	PreferSimpleProtocol bool `json:"prefer_simple_protocol"`
-	WithoutReturning     bool `json:"without_returning"`
+	PreferSimpleProtocol bool  `json:"prefer_simple_protocol"`
+	WithoutReturning     bool  `json:"without_returning"`
+	MaxIdleConnCount     int64 `json:"max_idle_conn_count"`
+	MaxOpenConnCount     int64 `json:"max_open_conn_count"`
+	ConnMaxLifetime      int64 `json:"conn_max_lifetime"`
 }
 
 type Sqlite struct {

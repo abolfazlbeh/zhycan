@@ -3,6 +3,7 @@ package logger
 import (
 	"fmt"
 	"github.com/abolfazlbeh/zhycan/internal/config"
+	"github.com/abolfazlbeh/zhycan/internal/logger/types"
 	"io"
 	"os"
 	"reflect"
@@ -40,8 +41,8 @@ func Test_ZhycanConsoleLogger(t *testing.T) {
 	}
 
 	logTime := time.Now().UTC()
-	logg.Log(NewLogObject(
-		DEBUG, "tester", FuncMaintenanceType, logTime, "TEST", nil))
+	logg.Log(types.NewLogObject(
+		types.DEBUG, "tester", types.FuncMaintenanceType, logTime, "TEST", nil))
 	logg.Sync()
 
 	time.Sleep(time.Second * 5)

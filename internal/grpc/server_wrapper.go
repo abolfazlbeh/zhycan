@@ -3,7 +3,10 @@ package grpc
 import (
 	"fmt"
 	"github.com/abolfazlbeh/zhycan/internal/logger"
+	"github.com/abolfazlbeh/zhycan/internal/logger/types"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/keepalive"
+	"google.golang.org/grpc/reflection"
 	"net"
 	"time"
 )
@@ -11,7 +14,7 @@ import (
 // MARK: Variables
 
 var (
-	ServerMaintenanceType = logger.NewLogType("PROTOBUF_SERVER_MAINTENANCE")
+	ServerMaintenanceType = types.NewLogType("PROTOBUF_SERVER_MAINTENANCE")
 )
 
 // ServerWrapper struct
@@ -50,6 +53,9 @@ func (s *ServerWrapper) init(name string, serverConfig ServerConfig) error {
 
 	s.listener = lis
 	s.grpcServer = grpc.NewServer(options...)
+	if s.config.Reflection {
+		reflection.Register(s.grpcServer)
+	}
 
 	s.initialized = true
 	return nil
@@ -59,12 +65,17 @@ func (s *ServerWrapper) init(name string, serverConfig ServerConfig) error {
 func (s *ServerWrapper) generateConfigs(configs map[string]interface{}) []grpc.ServerOption {
 	var options []grpc.ServerOption
 	if v, ok := configs["maxreceivemessagesize"]; ok {
-		options = append(options, grpc.MaxRecvMsgSize(v.(int)))
+		options = append(options, grpc.MaxRecvMsgSize(int(v.(float64))))
 	}
 
 	if v, ok := configs["maxsendmessagesize"]; ok {
-		options = append(options, grpc.MaxSendMsgSize(v.(int)))
+		options = append(options, grpc.MaxSendMsgSize(int(v.(float64))))
 	}
+
+	options = append(options, grpc.KeepaliveParams(keepalive.ServerParameters{
+		Time:    15 * time.Minute,
+		Timeout: 20 * time.Second,
+	}))
 
 	return options
 }
@@ -86,7 +97,7 @@ func NewServer(name string, config ServerConfig) (*ServerWrapper, error) {
 func (s *ServerWrapper) Start(ch *chan error) error {
 	l, _ := logger.GetManager().GetLogger()
 	if l != nil {
-		l.Log(logger.NewLogObject(logger.INFO, "protobuf.Server.Start", ServerMaintenanceType, time.Now(), "Starting the gRPC server ...", s.listener))
+		l.Log(types.NewLogObject(types.INFO, "protobuf.Server.Start", ServerMaintenanceType, time.Now(), "Starting the gRPC server ...", s.listener))
 	}
 
 	if s.config.Async {
@@ -118,11 +129,15 @@ func (s *ServerWrapper) IsInitialized() bool {
 	return s.initialized
 }
 
-func (s *ServerWrapper) RegisterController(f func(server *grpc.Server, cls interface{}), realClass interface{}) error {
+func (s *ServerWrapper) RegisterController(desc *grpc.ServiceDesc, realClass interface{}) error {
 	if realClass != nil {
-		f(s.grpcServer, realClass)
+		s.grpcServer.RegisterService(desc, realClass)
 		return nil
 	}
 
 	return NewNilServiceRegistryError()
+}
+
+func (s *ServerWrapper) GetGrpcServer() *grpc.Server {
+	return s.grpcServer
 }

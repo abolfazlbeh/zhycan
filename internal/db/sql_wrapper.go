@@ -4,12 +4,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/abolfazlbeh/zhycan/internal/config"
+	"github.com/abolfazlbeh/zhycan/internal/db/extensions"
+	"github.com/abolfazlbeh/zhycan/internal/logger/types"
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"reflect"
 	"strings"
+	"time"
 )
 
 // Mark: Definitions
@@ -19,6 +22,7 @@ type SqlWrapper[T SqlConfigurable] struct {
 	name             string
 	config           T
 	databaseInstance *gorm.DB
+	logger           types.Logger
 }
 
 // init - SqlWrapper Constructor - It initializes the wrapper
@@ -268,6 +272,11 @@ func (s *SqlWrapper[T]) init(name string) error {
 
 // MARK: Public functions
 
+// RegisterLogger - register logger instance
+func (s *SqlWrapper[T]) RegisterLogger(l types.Logger) {
+	s.logger = l
+}
+
 // GetDb - return associated internal Db
 func (s *SqlWrapper[T]) GetDb() (*gorm.DB, error) {
 	if s.databaseInstance == nil {
@@ -292,7 +301,10 @@ func (s *SqlWrapper[T]) GetDb() (*gorm.DB, error) {
 			}
 
 			if config.LoggerConfig != nil {
-				internalConfig.Logger = NewDbLogger(*config.LoggerConfig)
+				var inInterface map[string]interface{}
+				inrec, _ := json.Marshal(config.LoggerConfig)
+				json.Unmarshal(inrec, &inInterface)
+				internalConfig.Logger = extensions.NewDbLogger(inInterface, s.logger)
 			}
 
 			db, err := gorm.Open(sqlite.Open(dsn), internalConfig)
@@ -323,7 +335,11 @@ func (s *SqlWrapper[T]) GetDb() (*gorm.DB, error) {
 			}
 
 			if config.LoggerConfig != nil {
-				internalConfig.Logger = NewDbLogger(*config.LoggerConfig)
+				var inInterface map[string]interface{}
+				inrec, _ := json.Marshal(config.LoggerConfig)
+				json.Unmarshal(inrec, &inInterface)
+
+				internalConfig.Logger = extensions.NewDbLogger(inInterface, s.logger)
 			}
 
 			if config.SpecificConfig == nil {
@@ -376,7 +392,11 @@ func (s *SqlWrapper[T]) GetDb() (*gorm.DB, error) {
 			}
 
 			if config.LoggerConfig != nil {
-				internalConfig.Logger = NewDbLogger(*config.LoggerConfig)
+				var inInterface map[string]interface{}
+				inrec, _ := json.Marshal(config.LoggerConfig)
+				json.Unmarshal(inrec, &inInterface)
+
+				internalConfig.Logger = extensions.NewDbLogger(inInterface, s.logger)
 			}
 
 			if config.SpecificConfig == nil {
@@ -394,7 +414,15 @@ func (s *SqlWrapper[T]) GetDb() (*gorm.DB, error) {
 				if err != nil {
 					return nil, err
 				}
+
+				x, err := db.DB()
+				if err == nil {
+					x.SetMaxIdleConns(int(config.SpecificConfig.MaxIdleConnCount))
+					x.SetMaxOpenConns(int(config.SpecificConfig.MaxOpenConnCount))
+					x.SetConnMaxIdleTime(time.Minute * time.Duration(config.SpecificConfig.ConnMaxLifetime))
+				}
 				s.databaseInstance = db
+
 			}
 		}
 	}
@@ -403,7 +431,12 @@ func (s *SqlWrapper[T]) GetDb() (*gorm.DB, error) {
 
 // Migrate - migrate models to the database
 func (s *SqlWrapper[T]) Migrate(models ...interface{}) error {
-	err := s.databaseInstance.AutoMigrate(models...)
+	db, err := s.GetDb()
+	if err != nil {
+		return err
+	}
+
+	err = db.AutoMigrate(models...)
 	if err != nil {
 		return NewMigrateErr(err)
 	}

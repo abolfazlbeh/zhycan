@@ -19,5 +19,9 @@
     "ip": "172.25.205.37",
     "port": 514,
     "ctype": "tcp"
+  },
+  "db": {
+    "use": "server1",
+    "type": "sql"
   }
 }

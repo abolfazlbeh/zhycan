@@ -90,3 +90,104 @@ func (err *CreateMongoWrapperErr) Error() string {
 func NewCreateMongoWrapperErr(err error) error {
 	return &CreateMongoWrapperErr{Err: err}
 }
+
+// SelectQueryErr Error
+type SelectQueryErr struct {
+	query string
+	Err   error
+}
+
+// Error method - satisfying error interface
+func (err *SelectQueryErr) Error() string {
+	return fmt.Sprintf("Select query (`%v`) encouters error: %v", err.query, err.Err)
+}
+
+// NewSelectQueryErr - return a new instance of SelectQueryErr
+func NewSelectQueryErr(q string, err error) error {
+	return &SelectQueryErr{query: q, Err: err}
+}
+
+// DeleteModelErr Error
+type DeleteModelErr struct {
+	table string
+	data  any
+	Err   error
+}
+
+// Error method - satisfying error interface
+func (err *DeleteModelErr) Error() string {
+	return fmt.Sprintf("Deleting a record from (%v) with data: %v -> encouters error: %v", err.table, err.data, err.Err)
+}
+
+// NewDeleteModelErr - return a new instance of DeleteModelErr
+func NewDeleteModelErr(table string, data any, err error) error {
+	return &DeleteModelErr{table: table, data: data, Err: err}
+}
+
+// InsertModelErr Error
+type InsertModelErr struct {
+	table string
+	data  any
+	Err   error
+}
+
+// Error method - satisfying error interface
+func (err *InsertModelErr) Error() string {
+	return fmt.Sprintf("Inserting a record to (%v) with data: %v -> encouters error: %v", err.table, err.data, err.Err)
+}
+
+// NewInsertModelErr - return a new instance of InsertModelErr
+func NewInsertModelErr(table string, data any, err error) error {
+	return &InsertModelErr{table: table, data: data, Err: err}
+}
+
+// UpdateModelErr Error
+type UpdateModelErr struct {
+	table string
+	data  any
+	Err   error
+}
+
+// Error method - satisfying error interface
+func (err *UpdateModelErr) Error() string {
+	return fmt.Sprintf("Updating record(s) in (%v) with data: %v -> encouters error: %v", err.table, err.data, err.Err)
+}
+
+// NewUpdateModelErr - return a new instance of UpdateModelErr
+func NewUpdateModelErr(table string, data any, err error) error {
+	return &UpdateModelErr{table: table, data: data, Err: err}
+}
+
+// MongoFindQueryErr Error
+type MongoFindQueryErr struct {
+	collection string
+	filter     any
+	Err        error
+}
+
+// Error method - satisfying error interface
+func (err *MongoFindQueryErr) Error() string {
+	return fmt.Sprintf("Find query on (`%s`) with (%v) filter encouters error: %v", err.collection, err.filter, err.Err)
+}
+
+// NewMongoFindQueryErr - return a new instance of MongoFindQueryErr
+func NewMongoFindQueryErr(collection string, filter any, err error) error {
+	return &MongoFindQueryErr{collection: collection, filter: filter, Err: err}
+}
+
+// MongoDeleteErr Error
+type MongoDeleteErr struct {
+	collection string
+	filter     any
+	Err        error
+}
+
+// Error method - satisfying error interface
+func (err *MongoDeleteErr) Error() string {
+	return fmt.Sprintf("Delete query on (`%s`) with (%v) filter encouters error: %v", err.collection, err.filter, err.Err)
+}
+
+// NewMongoDeleteErr - return a new instance of MongoDeleteErr
+func NewMongoDeleteErr(collection string, filter any, err error) error {
+	return &MongoDeleteErr{collection: collection, filter: filter, Err: err}
+}

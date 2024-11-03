@@ -1,14 +1,15 @@
-package logger
+package types
 
 // Imports needed list
 import (
+	"gorm.io/gorm"
 	"strings"
 	"time"
 )
 
 // Some Constants
 const (
-	max = 6
+	MAX = 6
 )
 
 // LogObject - all methods that want to log must transfer object of this.
@@ -38,7 +39,7 @@ type LogLevel int
 
 // Some Constants - used with LogLevel
 const (
-	DEBUG LogLevel = max - iota
+	DEBUG LogLevel = MAX - iota
 	INFO
 	WARNING
 	ERROR
@@ -86,11 +87,31 @@ type LogType struct {
 	name string
 }
 
+// NewLogType - Create A New Log Type
+func NewLogType(name string) LogType {
+	return LogType{name: name}
+}
+
 var (
 	FuncMaintenanceType = LogType{name: "FUNC_MAINT"}
 	DebugType           = LogType{name: "DEBUG_INFORMATION"}
+	NilObject           = LogType{name: "NIL_OBJECT"}
 )
 
 func (l LogType) String() string {
 	return l.name
+}
+
+// MARK: DB Record
+
+type ZhycanLog struct {
+	gorm.Model
+
+	ServiceName string `gorm:"not null;size:256" json:"service_name"`
+	Level       string `gorm:"size:64" json:"level"`
+	LogType     string `gorm:"size:256" json:"log_type"`
+	Module      string `gorm:"size:1024" json:"module"`
+	Message     string `json:"message"`
+	Additional  string `json:"additional"`
+	LogTime     int64  `json:"logTime"`
 }
