@@ -344,41 +344,43 @@ File: "app/controller.go" --> {{ .Time.Format .TimeFormat }} by {{.CreatorUserNa
 package app
 
 import (
-    "fmt"
-    "github.com/gin-gonic/gin"
-    "github.com/abolfazlbeh/zhycan/pkg/http"
+	"context"
+	"fmt"
+	"github.com/abolfazlbeh/zhycan/pkg/http"
+	"github.com/gin-gonic/gin"
 )
 
 // MARK: Controller
 
 // SampleController - a sample controller to show the functionality
-type SampleController struct {}
+type SampleController struct{}
 
 // Routes - returning controller specific routes to be registered
 func (ctrl *SampleController) Routes() []http.HttpRoute {
-    return []http.HttpRoute {
-        http.HttpRoute {
-            Method:     http.MethodGet,
-            Path:       "/hello",
-            RouteName:  "hello",
-            F:          ctrl.GetHello,
-        },
-    }
+	return []http.HttpRoute{
+		http.HttpRoute{
+			Method:    http.MethodGet,
+			Path:      "/hello",
+			RouteName: "hello",
+			F:         ctrl.GetHello,
+		},
+	}
 }
 
 // GetHello - just return the 'Hello World' string to user
-func (ctrl *SampleController) GetHello(c *gin.Context) error {
-    return c.String("Hello World")
+func (ctrl *SampleController) GetHello(c *gin.Context) {
+	c.String(200, "Hello World")
 }
 
 // MARK: gRPC Controller
+
 // SampleProtoController - a sample protobuf controller to show the functionality
-type SampleProtoController struct {}
+type SampleProtoController struct{}
 
 func (ctrl *SampleProtoController) SayHello(ctx context.Context, rq *pb.HelloRequest) (*pb.HelloResponse, error) {
-    return &pb.HelloResponse {
-        Message: fmt.Sprintf("Hello, %s", rq.Name),
-    }, nil
+	return &pb.HelloResponse{
+		Message: fmt.Sprintf("Hello, %s", rq.Name),
+	}, nil
 }
 `
 
