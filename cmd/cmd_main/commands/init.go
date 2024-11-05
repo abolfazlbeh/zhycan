@@ -68,7 +68,7 @@ func initCmdExecute(cmd *cobra.Command, args []string) {
 	}
 
 	// Create go.mod file
-	goVersion := "1.19"
+	goVersion := "1.21"
 	err = createGoModFile(cmd, expectedProjectPath, projectName, goVersion)
 	if err != nil {
 		return
