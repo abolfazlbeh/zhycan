@@ -111,7 +111,7 @@ package commands
 
 import (
 	"github.com/spf13/cobra"
-	"github.com/abolfazlbeh/zhycan/pkg/command"
+	"github.com/abolfazlbeh/zhycan/pkg/cli"
 	"os"
 )
 
@@ -119,12 +119,7 @@ import (
 var rootCmd = &cobra.Command{
 	Use:   "{{.ProjectName}}",
 	Short: "A brief description of your application",
-	Long: """A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.""",
+	Long: "A longer description that spans multiple lines and likely contains\nexamples and usage of using your application. For example:\nCobra is a CLI library for Go that empowers applications.\nThis application is a tool to generate the needed files\nto quickly create a Cobra application.",
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -149,7 +144,7 @@ func init() {
 	//rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 
     // Attach Default Zhycan Cli Commands
-    command.AttachCommands(rootCmd)
+    cli.AttachCommands(rootCmd)
 
 	// MARK:Commands --- And New Commands Below ---
 	// rootCmd.AddCommand(NewInitCmd())
@@ -349,7 +344,8 @@ File: "app/controller.go" --> {{ .Time.Format .TimeFormat }} by {{.CreatorUserNa
 package app
 
 import (
-    "github.com/gofiber/fiber/v2"
+    "fmt"
+    "github.com/gin-gonic/gin"
     "github.com/abolfazlbeh/zhycan/pkg/http"
 )
 
@@ -365,16 +361,25 @@ func (ctrl *SampleController) Routes() []http.HttpRoute {
             Method:     http.MethodGet,
             Path:       "/hello",
             RouteName:  "hello",
-            F:          &ctrl.GetHello,
+            F:          ctrl.GetHello,
         },
     }
 }
 
 // GetHello - just return the 'Hello World' string to user
-func (ctrl *SampleController) GetHello(c *fiber.Ctx) error {
-    return c.SendString("Hello World")
+func (ctrl *SampleController) GetHello(c *gin.Context) error {
+    return c.String("Hello World")
 }
 
+// MARK: gRPC Controller
+// SampleProtoController - a sample protobuf controller to show the functionality
+type SampleProtoController struct {}
+
+func (ctrl *SampleProtoController) SayHello(ctx context.Context, rq *pb.HelloRequest) (*pb.HelloResponse, error) {
+    return &pb.HelloResponse {
+        Message: fmt.Sprintf("Hello, %s", rq.Name),
+    }, nil
+}
 `
 
 	appEngineTmpl = `/*
@@ -415,8 +420,9 @@ File: "app/model.go" --> {{ .Time.Format .TimeFormat }} by {{.CreatorUserName}}
 package app
 
 import (
-    "github.com/gofiber/fiber/v2"
-    "github.com/abolfazlbeh/zhycan/pkg/db"
+	"errors"
+	"github.com/abolfazlbeh/zhycan/pkg/db"
+	"gorm.io/gorm"
 )
 
 // MARK: Models
@@ -448,12 +454,12 @@ func CreateNewUser(name string) (*User, int64, error) {
 func GetAllUsers() (*[]User, int64, error) {
     database, err := db.GetDb("default")
     if err != nil {
-        return nil, errors.New("UserCreateError")
+        return nil, 0, errors.New("UserCreateError")
     }
 
     var users []User
 
-    result := db2.Find(&users)
+    result := database.Find(&users)
     if result.Error != nil {
         return nil, 0, result.Error
     }
