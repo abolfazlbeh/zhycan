@@ -10,7 +10,7 @@ package commands
 
 import (
 	"github.com/spf13/cobra"
-	"github.com/abolfazlbeh/zhycan/pkg/command"
+	"github.com/abolfazlbeh/zhycan/pkg/cli"
 	"os"
 )
 
@@ -48,7 +48,7 @@ func init() {
 	//rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 
     // Attach Default Zhycan Cli Commands
-    command.AttachCommands(rootCmd)
+    cli.AttachCommands(rootCmd)
 
 	// MARK:Commands --- And New Commands Below ---
 	// rootCmd.AddCommand(NewInitCmd())

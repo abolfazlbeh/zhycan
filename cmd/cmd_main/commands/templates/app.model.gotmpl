@@ -10,8 +10,9 @@ File: `app/model.go` --> {{ .Time.Format .TimeFormat }} by {{.CreatorUserName}}
 package app
 
 import (
-    "github.com/gofiber/fiber/v2"
-    "github.com/abolfazlbeh/zhycan/pkg/db"
+	"errors"
+	"github.com/abolfazlbeh/zhycan/pkg/db"
+	"gorm.io/gorm"
 )
 
 // MARK: Models
@@ -43,12 +44,12 @@ func CreateNewUser(name string) (*User, int64, error) {
 func GetAllUsers() (*[]User, int64, error) {
     database, err := db.GetDb("default")
     if err != nil {
-        return nil, errors.New("UserCreateError")
+        return nil, 0, errors.New("UserCreateError")
     }
 
     var users []User
 
-    result := db2.Find(&users)
+    result := database.Find(&users)
     if result.Error != nil {
         return nil, 0, result.Error
     }

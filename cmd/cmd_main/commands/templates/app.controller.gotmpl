@@ -11,7 +11,7 @@ package app
 
 import (
     "fmt"
-    "github.com/gofiber/fiber/v2"
+    "github.com/gin-gonic/gin"
     "github.com/abolfazlbeh/zhycan/pkg/http"
 )
 
@@ -27,13 +27,13 @@ func (ctrl *SampleController) Routes() []http.HttpRoute {
             Method:     http.MethodGet,
             Path:       "/hello",
             RouteName:  "hello",
-            F:          &ctrl.GetHello,
+            F:          ctrl.GetHello,
         },
     }
 }
 
 // GetHello - just return the 'Hello World' string to user
-func (ctrl *SampleController) GetHello(c *fiber.Ctx) error {
+func (ctrl *SampleController) GetHello(c *gin.Context) error {
     return c.SendString("Hello World")
 }
 
