@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	zlogger "github.com/abolfazlbeh/zhycan/internal/logger"
+	"github.com/abolfazlbeh/zhycan/internal/logger/types"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"gorm.io/gorm/logger"
 	"gorm.io/gorm/utils"
@@ -14,8 +15,8 @@ import (
 
 // MARK: Variables
 var (
-	DbLogType      = zlogger.NewLogType("DB_OP")
-	DbTraceLogType = zlogger.NewLogType("DB_TRACE_OP")
+	DbLogType      = types.NewLogType("DB_OP")
+	DbTraceLogType = types.NewLogType("DB_TRACE_OP")
 )
 
 // DbLogger - DB Logger struct
@@ -59,8 +60,8 @@ func (l DbLogger) Info(ctx context.Context, msg string, data ...interface{}) {
 	ll, _ := zlogger.GetManager().GetLogger()
 	if l.LogLevel >= logger.Info && ll != nil {
 		newMsg := fmt.Sprintf(msg, append([]interface{}{utils.FileWithLineNum()}, data...)...)
-		ll.Log(zlogger.NewLogObject(
-			zlogger.INFO, "db", DbLogType,
+		ll.Log(types.NewLogObject(
+			types.INFO, "db", DbLogType,
 			time.Now().UTC(), newMsg, nil,
 		))
 	}
@@ -71,8 +72,8 @@ func (l DbLogger) Warn(ctx context.Context, msg string, data ...interface{}) {
 	ll, _ := zlogger.GetManager().GetLogger()
 	if l.LogLevel >= logger.Warn && ll != nil {
 		newMsg := fmt.Sprintf(msg, append([]interface{}{utils.FileWithLineNum()}, data...)...)
-		ll.Log(zlogger.NewLogObject(
-			zlogger.WARNING, "db", DbLogType,
+		ll.Log(types.NewLogObject(
+			types.WARNING, "db", DbLogType,
 			time.Now().UTC(), newMsg, nil,
 		))
 	}
@@ -83,8 +84,8 @@ func (l DbLogger) Error(ctx context.Context, msg string, data ...interface{}) {
 	ll, _ := zlogger.GetManager().GetLogger()
 	if l.LogLevel >= logger.Error && ll != nil {
 		newMsg := fmt.Sprintf(msg, append([]interface{}{utils.FileWithLineNum()}, data...)...)
-		ll.Log(zlogger.NewLogObject(
-			zlogger.ERROR, "db", DbLogType,
+		ll.Log(types.NewLogObject(
+			types.ERROR, "db", DbLogType,
 			time.Now().UTC(), newMsg, nil,
 		))
 	}
@@ -107,14 +108,14 @@ func (l DbLogger) Trace(ctx context.Context, begin time.Time, fc func() (string,
 			msgLiteral := "%s %s\n[%.3fms] [rows:%v] %s"
 			if rows == -1 {
 				msg := fmt.Sprintf(msgLiteral, utils.FileWithLineNum(), err, float64(elapsed.Nanoseconds())/1e6, "-", sql)
-				ll.Log(zlogger.NewLogObject(
-					zlogger.ERROR, "db", DbTraceLogType,
+				ll.Log(types.NewLogObject(
+					types.ERROR, "db", DbTraceLogType,
 					time.Now().UTC(), msg, []interface{}{err, sql},
 				))
 			} else {
 				msg := fmt.Sprintf(msgLiteral, utils.FileWithLineNum(), err, float64(elapsed.Nanoseconds())/1e6, rows, sql)
-				ll.Log(zlogger.NewLogObject(
-					zlogger.ERROR, "db", DbTraceLogType,
+				ll.Log(types.NewLogObject(
+					types.ERROR, "db", DbTraceLogType,
 					time.Now().UTC(), msg, []interface{}{err, sql, rows},
 				))
 			}
@@ -125,14 +126,14 @@ func (l DbLogger) Trace(ctx context.Context, begin time.Time, fc func() (string,
 			msgLiteral := "%s %s\n[%.3fms] [rows:%v] %s"
 			if rows == -1 {
 				msg := fmt.Sprintf(msgLiteral, utils.FileWithLineNum(), slowLog, float64(elapsed.Nanoseconds())/1e6, "-", sql)
-				ll.Log(zlogger.NewLogObject(
-					zlogger.WARNING, "db", DbTraceLogType,
+				ll.Log(types.NewLogObject(
+					types.WARNING, "db", DbTraceLogType,
 					time.Now().UTC(), msg, []interface{}{slowLog, sql},
 				))
 			} else {
 				msg := fmt.Sprintf(msgLiteral, utils.FileWithLineNum(), slowLog, float64(elapsed.Nanoseconds())/1e6, rows, sql)
-				ll.Log(zlogger.NewLogObject(
-					zlogger.WARNING, "db", DbTraceLogType,
+				ll.Log(types.NewLogObject(
+					types.WARNING, "db", DbTraceLogType,
 					time.Now().UTC(), msg, []interface{}{slowLog, sql, rows},
 				))
 			}
@@ -142,14 +143,14 @@ func (l DbLogger) Trace(ctx context.Context, begin time.Time, fc func() (string,
 			msgLiteral := "%s\n[%.3fms] [rows:%v] %s"
 			if rows == -1 {
 				msg := fmt.Sprintf(msgLiteral, utils.FileWithLineNum(), float64(elapsed.Nanoseconds())/1e6, "-", sql)
-				ll.Log(zlogger.NewLogObject(
-					zlogger.INFO, "db", DbTraceLogType,
+				ll.Log(types.NewLogObject(
+					types.INFO, "db", DbTraceLogType,
 					time.Now().UTC(), msg, []interface{}{sql},
 				))
 			} else {
 				msg := fmt.Sprintf(msgLiteral, utils.FileWithLineNum(), float64(elapsed.Nanoseconds())/1e6, rows, sql)
-				ll.Log(zlogger.NewLogObject(
-					zlogger.INFO, "db", DbTraceLogType,
+				ll.Log(types.NewLogObject(
+					types.INFO, "db", DbTraceLogType,
 					time.Now().UTC(), msg, []interface{}{sql, rows},
 				))
 			}
@@ -165,13 +166,13 @@ func (m *MongoLogger) Info(level int, message string, keysAndValues ...interface
 	ll, _ := zlogger.GetManager().GetLogger()
 	if ll != nil {
 		if options.LogLevel(level) == options.LogLevelInfo {
-			ll.Log(zlogger.NewLogObject(
-				zlogger.INFO, "mongodb", DbLogType,
+			ll.Log(types.NewLogObject(
+				types.INFO, "mongodb", DbLogType,
 				time.Now().UTC(), message, keysAndValues,
 			))
 		} else if options.LogLevel(level) == options.LogLevelDebug {
-			ll.Log(zlogger.NewLogObject(
-				zlogger.DEBUG, "mongodb", DbLogType,
+			ll.Log(types.NewLogObject(
+				types.DEBUG, "mongodb", DbLogType,
 				time.Now().UTC(), message, keysAndValues,
 			))
 		}
@@ -182,8 +183,8 @@ func (m *MongoLogger) Error(err error, message string, keysAndValues ...interfac
 	ll, _ := zlogger.GetManager().GetLogger()
 	if ll != nil {
 		msg := fmt.Sprintf("%s -> err: %v", message, err)
-		ll.Log(zlogger.NewLogObject(
-			zlogger.ERROR, "mongodb", DbLogType,
+		ll.Log(types.NewLogObject(
+			types.ERROR, "mongodb", DbLogType,
 			time.Now().UTC(), msg, keysAndValues,
 		))
 	}
