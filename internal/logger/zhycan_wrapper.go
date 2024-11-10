@@ -227,7 +227,7 @@ func (l *LogMeWrapper) runner(output string) {
 func (l *LogMeWrapper) debug(object *types.LogObject, output string) {
 	if output == "console" {
 		l.supportedOutputOption[output].l.Printf(
-			"\\e[37m%v %v >>> %7v >>> (%v/%v)  - %v ... %v\\e[0m\n",
+			"\033[37m%v %v >>> %7v >>> (%v/%v)  - %v ... %v\033[0m\n",
 			l.serviceName,
 			object.Time,
 			object.Level.String(),
@@ -243,7 +243,7 @@ func (l *LogMeWrapper) debug(object *types.LogObject, output string) {
 func (l *LogMeWrapper) info(object *types.LogObject, output string) {
 	if output == "console" {
 		l.supportedOutputOption[output].l.Printf(
-			"\\e[32m%v %v >>> %7v >>> (%v/%v)  - %v ... %v\\e[0m\n",
+			"\033[32m%v %v >>> %7v >>> (%v/%v)  - %v ... %v\033[0m\n",
 			l.serviceName,
 			object.Time,
 			object.Level.String(),
@@ -259,7 +259,7 @@ func (l *LogMeWrapper) info(object *types.LogObject, output string) {
 func (l *LogMeWrapper) warning(object *types.LogObject, output string) {
 	if output == "console" {
 		l.supportedOutputOption[output].l.Printf(
-			"\\e[33m%v %v >>> %7v >>> (%v/%v)  - %v ... %v\\e[0m\n",
+			"\033[33m%v %v >>> %7v >>> (%v/%v)  - %v ... %v\033[0m\n",
 			l.serviceName,
 			object.Time,
 			object.Level.String(),
@@ -275,7 +275,7 @@ func (l *LogMeWrapper) warning(object *types.LogObject, output string) {
 func (l *LogMeWrapper) error(object *types.LogObject, output string) {
 	if output == "console" {
 		l.supportedOutputOption[output].l.Printf(
-			"\\e[31m%v %v >>> %7v >>> (%v/%v)  - %v ... %v\\e[0m\n",
+			"\033[31m%v %v >>> %7v >>> (%v/%v)  - %v ... %v\033[0m\n",
 			l.serviceName,
 			object.Time,
 			object.Level.String(),
