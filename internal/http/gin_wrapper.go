@@ -3,14 +3,24 @@ package http
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/abolfazlbeh/zhycan/internal/http/middlewares"
 	"github.com/abolfazlbeh/zhycan/internal/http/types"
+	"github.com/abolfazlbeh/zhycan/internal/logger"
+	logTypes "github.com/abolfazlbeh/zhycan/internal/logger/types"
 	"github.com/abolfazlbeh/zhycan/internal/utils"
 	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
 	"strings"
+	"time"
+)
+
+// MARK: Variables
+
+var (
+	HttpServerMaintenanceType = logTypes.NewLogType("HTTP_SERVER_MAINTENANCE")
 )
 
 // Mark: Definitions
@@ -187,8 +197,11 @@ func (s *GinServer) Start() error {
 
 	errCh := make(chan error)
 	go func(ch chan error) {
-		if err := s.app.ListenAndServe(); err != http.ErrServerClosed {
-			log.Println("Http Server Started on " + s.config.ListenAddress)
+		if err := s.app.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
+			l, _ := logger.GetManager().GetLogger()
+			if l != nil {
+				l.Log(logTypes.NewLogObject(logTypes.INFO, "http.Server.Start", HttpServerMaintenanceType, time.Now(), "Starting the Http server ...", s.config.ListenAddress))
+			}
 			close(ch)
 		} else {
 			ch <- err
