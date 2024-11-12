@@ -26,3 +26,23 @@ func ZapRecoveryLogger() gin.HandlerFunc {
 
 	return ginzap.RecoveryWithZap(logger1, true)
 }
+
+func LogMeLogger() gin.HandlerFunc {
+	logge, err := logger.GetManager().GetLogger()
+	if err != nil {
+		return nil
+	}
+	logger1 := logge.(*logger.LogMeWrapper).Instance()
+
+	return gin.LoggerWithWriter(logger1.Writer())
+}
+
+func LogMeRecoveryLogger() gin.HandlerFunc {
+	logge, err := logger.GetManager().GetLogger()
+	if err != nil {
+		return nil
+	}
+	logger1 := logge.(*logger.LogMeWrapper).Instance()
+
+	return gin.RecoveryWithWriter(logger1.Writer())
+}
