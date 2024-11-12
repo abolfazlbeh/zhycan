@@ -9,9 +9,11 @@ File: `root.go` --> {{ .Time.Format .TimeFormat }} by {{.CreatorUserName}}
 package commands
 
 import (
+	"fmt"
 	"github.com/spf13/cobra"
 	"github.com/abolfazlbeh/zhycan/pkg/cli"
 	"os"
+	"{{.ProjectName}}/app"
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -24,6 +26,15 @@ examples and usage of using your application. For example:
 Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		if cmd.Use == "runserver" {
+			app1 := &app.App{}
+			app1.Init()
+		}
+	},
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Println(cmd.Use)
+	},
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.

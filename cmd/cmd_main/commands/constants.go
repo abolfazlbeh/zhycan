@@ -110,9 +110,11 @@ File: "root.go" --> {{ .Time.Format .TimeFormat }} by {{.CreatorUserName}}
 package commands
 
 import (
+	"fmt"
 	"github.com/spf13/cobra"
 	"github.com/abolfazlbeh/zhycan/pkg/cli"
 	"os"
+	"{{.ProjectName}}/app"
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -120,6 +122,15 @@ var rootCmd = &cobra.Command{
 	Use:   "{{.ProjectName}}",
 	Short: "A brief description of your application",
 	Long: "A longer description that spans multiple lines and likely contains\nexamples and usage of using your application. For example:\nCobra is a CLI library for Go that empowers applications.\nThis application is a tool to generate the needed files\nto quickly create a Cobra application.",
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		if cmd.Use == "runserver" {
+			app1 := &app.App{}
+			app1.Init()
+		}
+	},
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Println(cmd.Use)
+	},
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -307,26 +318,22 @@ DerivedData/
     {
       "name":                   "s1",
       "addr":                   ":3000",
-      "versions":               ["v1", "v2"],
+      "versions":               ["v1"],
+      "support_static":         false,
       "conf": {
-        "server_header": "",
-        "strict_routing": false,
-        "case_sensitive": false,
-        "unescape_path": false,
-        "etag": false,
-        "body_limit": 4194304,
-        "concurrency": 262144,
         "read_timeout": -1,
         "write_timeout": -1,
-        "idle_timeout": -1,
-        "read_buffer_size": 4096,
-        "write_buffer_size": 4096,
-        "compressed_file_suffix": ".gz",
-        "get_only": false,
-        "disable_keepalive": false,
-        "network": "tcp",
-        "enable_print_routes": true,
-        "attach_error_handler": true
+        "request_methods": ["ALL"]
+      },
+      "middlewares": {
+        "order": ["logger", "cors"],
+        "logger": {
+          "format": "> [${time}] ${status} - ${latency} ${method} ${path} ${queryParams}\n",
+          "time_format": "15:04:05",
+          "time_zone": "Local",
+          "time_interval": 500,
+          "output": "stdout",
+        }
       }
     }
   ]
@@ -355,6 +362,9 @@ import (
 // SampleController - a sample controller to show the functionality
 type SampleController struct{}
 
+// GetName - return the name of the controller to be used as part of the route
+func (ctrl *SampleController) GetName() string { return "Sample" }
+
 // Routes - returning controller specific routes to be registered
 func (ctrl *SampleController) Routes() []http.HttpRoute {
 	return []http.HttpRoute{
@@ -375,13 +385,13 @@ func (ctrl *SampleController) GetHello(c *gin.Context) {
 // MARK: gRPC Controller
 
 // SampleProtoController - a sample protobuf controller to show the functionality
-type SampleProtoController struct{}
-
-func (ctrl *SampleProtoController) SayHello(ctx context.Context, rq *pb.HelloRequest) (*pb.HelloResponse, error) {
-	return &pb.HelloResponse{
-		Message: fmt.Sprintf("Hello, %s", rq.Name),
-	}, nil
-}
+//type SampleProtoController struct{}
+//
+//func (ctrl *SampleProtoController) SayHello(ctx context.Context, rq *pb.HelloRequest) (*pb.HelloResponse, error) {
+//	return &pb.HelloResponse{
+//		Message: fmt.Sprintf("Hello, %s", rq.Name),
+//	}, nil
+//}
 `
 
 	appEngineTmpl = `/*
@@ -395,6 +405,11 @@ File: "app/app.go" --> {{ .Time.Format .TimeFormat }} by {{.CreatorUserName}}
 
 package app
 
+import (
+	"github.com/abolfazlbeh/zhycan/pkg/engine"
+	"github.com/abolfazlbeh/zhycan/pkg/http"
+)
+
 // MARK: App Engine
 
 // App - application engine structure that must satisfy one of the engine interface such as 'engine.RestfulApp', ...
@@ -402,11 +417,7 @@ type App struct {}
 
 // Init - initialize the app
 func (app *App) Init() {
-    err := engine.RegisterRestfulController(&SampleController{Name: "sample"})
-    if err != nil {
-        logger.Log(logger.NewLogObject(
-            logger.ERROR, "App.Init", logger.FuncMaintenanceType, time.Now().UTC(), "Cannot Register Restful Controller", err))
-    }
+    engine.RegisterRestfulController(&SampleController{})
 }
 `
 

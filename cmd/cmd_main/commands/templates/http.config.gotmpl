@@ -4,25 +4,22 @@
     {
       "name":                   "s1",
       "addr":                   ":3000",
+      "versions":               ["v1"],
+      "support_static":         false,
       "conf": {
-        "server_header": "",
-        "strict_routing": false,
-        "case_sensitive": false,
-        "unescape_path": false,
-        "etag": false,
-        "body_limit": 4194304,
-        "concurrency": 262144,
         "read_timeout": -1,
         "write_timeout": -1,
-        "idle_timeout": -1,
-        "read_buffer_size": 4096,
-        "write_buffer_size": 4096,
-        "compressed_file_suffix": ".gz",
-        "get_only": false,
-        "disable_keepalive": false,
-        "network": "tcp",
-        "enable_print_routes": true,
-        "attach_error_handler": true
+        "request_methods": ["ALL"]
+      },
+      "middlewares": {
+        "order": ["logger", "cors"],
+        "logger": {
+          "format": "> [${time}] ${status} - ${latency} ${method} ${path} ${queryParams}\n",
+          "time_format": "15:04:05",
+          "time_zone": "Local",
+          "time_interval": 500,
+          "output": "stdout"
+        }
       }
     }
   ]

@@ -153,6 +153,12 @@ func (l *LogMeWrapper) IsInitialized() bool {
 	return l.initialized
 }
 
+// Instance - returns exact logger instance
+func (l *LogMeWrapper) Instance() *log.Logger {
+	l.wg.Wait()
+	return l.supportedOutputOption["stdout"].l
+}
+
 // Log - write log object to the channel
 func (l *LogMeWrapper) Log(obj *types.LogObject) {
 	l.wg.Wait()
