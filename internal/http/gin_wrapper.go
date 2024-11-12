@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/abolfazlbeh/zhycan/internal/config"
 	"github.com/abolfazlbeh/zhycan/internal/http/middlewares"
 	"github.com/abolfazlbeh/zhycan/internal/http/types"
 	"github.com/abolfazlbeh/zhycan/internal/logger"
@@ -114,8 +115,19 @@ func (s *GinServer) attachMiddlewares(orders []string, rawConfig map[string]inte
 		if utils.ArrayContains(&s.supportedMiddlewares, item) {
 			switch item {
 			case "logger":
-				s.baseRouter.Use(middlewares.ZapLogger())
-				s.baseRouter.Use(middlewares.ZapRecoveryLogger())
+				{
+					// check which logger must be used
+					loggerType, err := config.GetManager().Get("logger", "type")
+					if err == nil {
+						if loggerType == "zap" {
+							s.baseRouter.Use(middlewares.ZapLogger())
+							s.baseRouter.Use(middlewares.ZapRecoveryLogger())
+						} else if loggerType == "logme" {
+							s.baseRouter.Use(middlewares.LogMeLogger())
+							s.baseRouter.Use(middlewares.LogMeRecoveryLogger())
+						}
+					}
+				}
 			case "favicon":
 				if loggerCfg, ok := rawConfig[item].(map[string]interface{}); ok {
 					jsonBody, err2 := json.Marshal(loggerCfg)
