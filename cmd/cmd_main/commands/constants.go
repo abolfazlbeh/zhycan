@@ -110,9 +110,11 @@ File: "root.go" --> {{ .Time.Format .TimeFormat }} by {{.CreatorUserName}}
 package commands
 
 import (
+	"fmt"
 	"github.com/spf13/cobra"
 	"github.com/abolfazlbeh/zhycan/pkg/cli"
 	"os"
+	"{{.ProjectName}}/app"
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -120,6 +122,15 @@ var rootCmd = &cobra.Command{
 	Use:   "{{.ProjectName}}",
 	Short: "A brief description of your application",
 	Long: "A longer description that spans multiple lines and likely contains\nexamples and usage of using your application. For example:\nCobra is a CLI library for Go that empowers applications.\nThis application is a tool to generate the needed files\nto quickly create a Cobra application.",
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		if cmd.Use == "runserver" {
+			app1 := &app.App{}
+			app1.Init()
+		}
+	},
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Println(cmd.Use)
+	},
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -355,6 +366,9 @@ import (
 // SampleController - a sample controller to show the functionality
 type SampleController struct{}
 
+// GetName - return the name of the controller to be used as part of the route
+func (ctrl *SampleController) GetName() string { return "Sample" }
+
 // Routes - returning controller specific routes to be registered
 func (ctrl *SampleController) Routes() []http.HttpRoute {
 	return []http.HttpRoute{
@@ -375,13 +389,13 @@ func (ctrl *SampleController) GetHello(c *gin.Context) {
 // MARK: gRPC Controller
 
 // SampleProtoController - a sample protobuf controller to show the functionality
-type SampleProtoController struct{}
-
-func (ctrl *SampleProtoController) SayHello(ctx context.Context, rq *pb.HelloRequest) (*pb.HelloResponse, error) {
-	return &pb.HelloResponse{
-		Message: fmt.Sprintf("Hello, %s", rq.Name),
-	}, nil
-}
+//type SampleProtoController struct{}
+//
+//func (ctrl *SampleProtoController) SayHello(ctx context.Context, rq *pb.HelloRequest) (*pb.HelloResponse, error) {
+//	return &pb.HelloResponse{
+//		Message: fmt.Sprintf("Hello, %s", rq.Name),
+//	}, nil
+//}
 `
 
 	appEngineTmpl = `/*
@@ -395,6 +409,11 @@ File: "app/app.go" --> {{ .Time.Format .TimeFormat }} by {{.CreatorUserName}}
 
 package app
 
+import (
+	"github.com/abolfazlbeh/zhycan/pkg/engine"
+	"github.com/abolfazlbeh/zhycan/pkg/http"
+)
+
 // MARK: App Engine
 
 // App - application engine structure that must satisfy one of the engine interface such as 'engine.RestfulApp', ...
@@ -402,11 +421,7 @@ type App struct {}
 
 // Init - initialize the app
 func (app *App) Init() {
-    err := engine.RegisterRestfulController(&SampleController{Name: "sample"})
-    if err != nil {
-        logger.Log(logger.NewLogObject(
-            logger.ERROR, "App.Init", logger.FuncMaintenanceType, time.Now().UTC(), "Cannot Register Restful Controller", err))
-    }
+    engine.RegisterRestfulController(&SampleController{})
 }
 `
 
