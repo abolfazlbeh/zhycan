@@ -11,6 +11,7 @@ package app
 
 import (
     "github.com/abolfazlbeh/zhycan/pkg/engine"
+    "github.com/abolfazlbeh/zhycan/pkg/http"
 )
 
 // MARK: App Engine
@@ -20,9 +21,5 @@ type App struct {}
 
 // Init - initialize the app
 func (app *App) Init() {
-    err := engine.RegisterRestfulController(&SampleController{Name: "sample"})
-    if err != nil {
-        logger.Log(logger.NewLogObject(
-            logger.ERROR, "App.Init", logger.FuncMaintenanceType, time.Now().UTC(), "Cannot Register Restful Controller", err))
-    }
+    engine.RegisterRestfulController(&SampleController{})
 }
