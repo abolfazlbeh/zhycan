@@ -201,12 +201,16 @@ func (l *LogMeWrapper) runner(output string) {
 				switch c.Level {
 				case types.DEBUG:
 					l.debug(&c, output)
+					break
 				case types.INFO:
 					l.info(&c, output)
+					break
 				case types.WARNING:
-					l.info(&c, output)
+					l.warning(&c, output)
+					break
 				case types.ERROR:
-					l.info(&c, output)
+					l.error(&c, output)
+					break
 				}
 			} else if output == "db" {
 				if l.supportedOutputOption[output].dbType == "sql" {
