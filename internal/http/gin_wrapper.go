@@ -67,7 +67,7 @@ func (s *GinServer) init(name string, serverConfig types.GinServerConfig, rawCon
 		}
 	}
 
-	s.baseRouter = gin.Default()
+	s.baseRouter = gin.New()
 
 	s.groups = make(map[string]*gin.RouterGroup)
 	s.supportedMiddlewares = []string{
@@ -124,7 +124,7 @@ func (s *GinServer) attachMiddlewares(orders []string, rawConfig map[string]inte
 							s.baseRouter.Use(middlewares.ZapRecoveryLogger())
 						} else if loggerType == "logme" {
 							s.baseRouter.Use(middlewares.LogMeLogger())
-							//s.baseRouter.Use(middlewares.LogMeRecoveryLogger())
+							s.baseRouter.Use(middlewares.LogMeRecoveryLogger())
 						}
 					}
 				}
@@ -210,10 +210,6 @@ func (s *GinServer) Start() error {
 	errCh := make(chan error)
 	go func(ch chan error) {
 		if err := s.app.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
-			l, _ := logger.GetManager().GetLogger()
-			if l != nil {
-				l.Log(logTypes.NewLogObject(logTypes.INFO, "http.Server.Start", HttpServerMaintenanceType, time.Now(), "Starting the Http server ...", s.config.ListenAddress))
-			}
 			close(ch)
 		} else {
 			ch <- err
@@ -221,7 +217,23 @@ func (s *GinServer) Start() error {
 		}
 	}(errCh)
 
+	time.AfterFunc(3*time.Second, func() {
+		errCh <- nil
+	})
 	err := <-errCh
+
+	if err == nil {
+		l, _ := logger.GetManager().GetLogger()
+		if l != nil {
+			l.Log(logTypes.NewLogObject(logTypes.INFO, "http.Server.Start", HttpServerMaintenanceType, time.Now(), "Starting the Http server ...", s.config.ListenAddress))
+		}
+	} else {
+		l, _ := logger.GetManager().GetLogger()
+		if l != nil {
+			l.Log(logTypes.NewLogObject(logTypes.ERROR, "http.Server.Start", HttpServerMaintenanceType, time.Now(), "Starting the Http server failed ...", err))
+		}
+	}
+
 	return err
 }
 
