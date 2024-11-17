@@ -2,14 +2,12 @@ package http
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/abolfazlbeh/zhycan/internal/config"
 	"github.com/abolfazlbeh/zhycan/internal/http/types"
 	"github.com/abolfazlbeh/zhycan/internal/utils"
 	"github.com/gin-gonic/gin"
 	"log"
 	"sync"
-	"time"
 )
 
 // Mark: manager
@@ -149,17 +147,16 @@ func (m *manager) StartServers() error {
 			}(item, ch)
 		}
 
-		exitTheLoop := true
-		for exitTheLoop {
-			select {
-			case <-time.After(time.Second * 3):
-				exitTheLoop = false
-			case result := <-ch:
-				// Todo: log the errors
-				fmt.Printf("Error Starting Server: %v\n", result)
-
-			}
-		}
+		//exitTheLoop := true
+		//for exitTheLoop {
+		//	select {
+		//	case <-time.After(time.Second * 3):
+		//		exitTheLoop = false
+		//	case result := <-ch:
+		//		fmt.Printf("Error Starting Server: %v\n", result)
+		//
+		//	}
+		//}
 
 		m.isServersStarted = true
 	}
