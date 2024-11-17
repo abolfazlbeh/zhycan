@@ -124,7 +124,7 @@ func (s *GinServer) attachMiddlewares(orders []string, rawConfig map[string]inte
 							s.baseRouter.Use(middlewares.ZapRecoveryLogger())
 						} else if loggerType == "logme" {
 							s.baseRouter.Use(middlewares.LogMeLogger())
-							s.baseRouter.Use(middlewares.LogMeRecoveryLogger())
+							//s.baseRouter.Use(middlewares.LogMeRecoveryLogger())
 						}
 					}
 				}
