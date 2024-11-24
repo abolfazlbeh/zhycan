@@ -748,7 +748,6 @@ func createGreeterCompiledFiles(cmd *cobra.Command, expectedProjectPath string, 
 
 	pbGrpcTempl := strings.ReplaceAll(greeterProtobufGrpcPbTmpl, "U+0060", "`")
 	temp = template.Must(template.New("").Parse(pbGrpcTempl))
-	temp.Execute(os.Stdout, nil)
 	err = temp.Execute(file, goModuleVars)
 	if err != nil {
 		fmt.Fprintln(cmd.OutOrStdout())

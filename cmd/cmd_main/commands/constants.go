@@ -292,7 +292,9 @@ DerivedData/
   "config_remote_infra": "grpc",
   "config_remote_duration": 300,
   "modules": [
-    {"name":"logger", "type": "local"}
+    {"name":"logger", "type": "local"},
+    {"name":"http", "type": "local"},
+    {"name":"protobuf", "type": "local"}
   ]
 }`
 	loggerConfigTmpl = `{
@@ -379,6 +381,7 @@ import (
 	"fmt"
 	"github.com/abolfazlbeh/zhycan/pkg/http"
 	"github.com/gin-gonic/gin"
+	"{{.ProjectName}}/app/proto/greeter"
 )
 
 // MARK: Controller
@@ -409,7 +412,9 @@ func (ctrl *SampleController) GetHello(c *gin.Context) {
 // MARK: gRPC Controller
 
 // SampleProtoController - a sample protobuf controller to show the functionality
-type SampleProtoController struct{}
+type SampleProtoController struct{
+	greeter.UnimplementedGreeterServer
+}
 
 func (ctrl *SampleProtoController) GetName() string {
 	return "Greeter"
@@ -419,8 +424,8 @@ func (ctrl *SampleProtoController) GetServerNames() []string {
 	return []string{"server1"} // it must exist in the "protobuf" config
 }
 
-func (ctrl *SampleProtoController) SayHello(ctx context.Context, rq *pb.HelloRequest) (*pb.HelloResponse, error) {
-	return &pb.HelloResponse{
+func (ctrl *SampleProtoController) SayHello(ctx context.Context, rq *greeter.HelloRequest) (*greeter.HelloResponse, error) {
+	return &greeter.HelloResponse{
 		Message: fmt.Sprintf("Hello, %s", rq.Name),
 	}, nil
 }
