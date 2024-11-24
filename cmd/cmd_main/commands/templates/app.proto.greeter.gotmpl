@@ -6,6 +6,10 @@ Project: {{.ProjectName}}
 File: `app/proto/greeter.proto` --> {{ .Time.Format .TimeFormat }} by {{.CreatorUserName}}
 ------------------------------
 */
+syntax = "proto3";
+
+package greeter;
+option go_package = "{{.ProjectName}}/app/proto/greeter";
 
 // The greeting service definition.
 service Greeter {

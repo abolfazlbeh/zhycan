@@ -44,10 +44,18 @@ func (ctrl *SampleController) GetHello(c *gin.Context) {
 // MARK: gRPC Controller
 
 // SampleProtoController - a sample protobuf controller to show the functionality
-// type SampleProtoController struct{}
+type SampleProtoController struct{}
 
-// func (ctrl *SampleProtoController) SayHello(ctx context.Context, rq *pb.HelloRequest) (*pb.HelloResponse, error) {
-// 	return &pb.HelloResponse{
-// 		Message: fmt.Sprintf("Hello, %s", rq.Name),
-// 	}, nil
-// }
+func (ctrl *SampleProtoController) GetName() string {
+	return "Greeter"
+}
+
+func (ctrl *SampleProtoController) GetServerNames() []string {
+	return []string{"server1"} // it must exist in the "protobuf" config
+}
+
+func (ctrl *SampleProtoController) SayHello(ctx context.Context, rq *pb.HelloRequest) (*pb.HelloResponse, error) {
+	return &pb.HelloResponse{
+		Message: fmt.Sprintf("Hello, %s", rq.Name),
+	}, nil
+}
