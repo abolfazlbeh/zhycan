@@ -10,8 +10,9 @@ File: `app/app.go` --> {{ .Time.Format .TimeFormat }} by {{.CreatorUserName}}
 package app
 
 import (
-    "github.com/abolfazlbeh/zhycan/pkg/engine"
-    "github.com/abolfazlbeh/zhycan/pkg/http"
+	"github.com/abolfazlbeh/zhycan/pkg/engine"
+	"google.golang.org/grpc"
+	"{{.ProjectName}}/app/proto/greeter"
 )
 
 // MARK: App Engine
@@ -22,4 +23,9 @@ type App struct {}
 // Init - initialize the app
 func (app *App) Init() {
     engine.RegisterRestfulController(&SampleController{})
+
+	greeterService := SampleProtoController{}
+	engine.RegisterGrpcController(&greeterService, func(server *grpc.Server) {
+		greeter.RegisterGreeterServer(server, &greeterService)
+	})
 }
