@@ -33,6 +33,9 @@ func runCompileCmdExecute(cmd *cobra.Command, args []string) {
 
 	ex, err := os.Executable()
 	if err != nil {
-		fmt.Fprintf(cmd.OutOrStdout(), ex)
+		fmt.Fprintf(cmd.OutOrStdout(), err.Error())
+	} else {
+		fmt.Fprintf(cmd.OutOrStdout(), "Current Path: %s", ex)
 	}
+
 }
