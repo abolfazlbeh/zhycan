@@ -86,7 +86,6 @@ func runCompileCmdExecute(cmd *cobra.Command, args []string) {
 	protoCmd.Args = append(protoCmd.Args, fmt.Sprintf("--go-grpc_opt=paths=source_relative"))
 	protoCmd.Args = append(protoCmd.Args, fmt.Sprintf("%s.proto", args[0]))
 
-	fmt.Fprintln(cmd.OutOrStdout(), protoCmd)
 	protocErr := protoCmd.Start()
 	if protocErr != nil {
 		fmt.Fprintln(cmd.OutOrStdout())
