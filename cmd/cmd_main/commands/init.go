@@ -9,6 +9,7 @@ import (
 	"os/user"
 	"path/filepath"
 	"sort"
+	"strings"
 	"text/template"
 	"time"
 )
@@ -18,14 +19,15 @@ var ExpectedSubDirectories = func() []string {
 }
 
 var ExpectedConfigFiles = func() []string {
-	return []string{"base", "logger", "http"}
+	return []string{"base", "logger", "http", "protobuf"}
 }
 
 var ExpectedConfigContentTmpl = func() map[string]string {
 	return map[string]string{
-		"base":   baseConfigTmpl,
-		"logger": loggerConfigTmpl,
-		"http":   httpConfigTmpl,
+		"base":     baseConfigTmpl,
+		"logger":   loggerConfigTmpl,
+		"http":     httpConfigTmpl,
+		"protobuf": protobufConfigTmpl,
 	}
 }
 
@@ -123,6 +125,11 @@ func initCmdExecute(cmd *cobra.Command, args []string) {
 		return
 	}
 
+	err = createGreeterCompiledFiles(cmd, expectedProjectPath, projectName, currentUser.Username, year)
+	if err != nil {
+		return
+	}
+
 	err = execGoModTidy(cmd, expectedProjectPath)
 	if err != nil {
 		return
@@ -205,6 +212,15 @@ func createAppDirFiles(cmd *cobra.Command, expectedProjectPath string, projectNa
 
 	err = createGreeterProtobufFile(cmd, expectedProjectPath, projectName, username, year)
 	if err != nil {
+		return err
+	}
+
+	pathToCreate = filepath.Join(expectedProjectPath, "app", "proto", "greeter")
+
+	err = os.Mkdir(pathToCreate, os.ModePerm)
+	if err != nil {
+		fmt.Fprintln(cmd.OutOrStdout())
+		fmt.Fprintf(cmd.OutOrStdout(), SubDirectoryIsNotCreated, "app/proto/greeter", err)
 		return err
 	}
 
@@ -679,5 +695,68 @@ func createOneDevConfigFile(cmd *cobra.Command, expectedProjectPath string, conf
 		fmt.Fprintln(cmd.OutOrStdout())
 		fmt.Fprintf(cmd.OutOrStdout(), ConfigDevFileIsCreated, configFileName)
 	}
+	return nil
+}
+
+func createGreeterCompiledFiles(cmd *cobra.Command, expectedProjectPath string, projectName string, creatorUsername string, year int) error {
+	// create .gitignore file from template and place it in the directory
+	folderPath := filepath.Join(expectedProjectPath, "app", "proto", "greeter")
+	greeterPb := filepath.Join(folderPath, "greeter.pb.go")
+	file, err := os.Create(greeterPb)
+	if err != nil {
+		fmt.Fprintln(cmd.OutOrStdout())
+		fmt.Fprintf(cmd.OutOrStdout(), GreeterCompiledProtobufIsNotCreated, err)
+		return err
+
+	}
+	defer file.Close()
+
+	pbTempl := strings.ReplaceAll(greeterProtobufPbTmpl, "U+0060", "`")
+	temp := template.Must(template.New("").Parse(pbTempl))
+	goModuleVars := struct {
+		ProjectName     string
+		CreatorUserName string
+		Time            time.Time
+		TimeFormat      string
+		Year            int
+	}{
+		ProjectName:     projectName,
+		CreatorUserName: creatorUsername,
+		Time:            time.Now().Local(),
+		TimeFormat:      time.RFC822,
+		Year:            year,
+	}
+	err = temp.Execute(file, goModuleVars)
+	if err != nil {
+		fmt.Fprintln(cmd.OutOrStdout())
+		fmt.Fprintf(cmd.OutOrStdout(), GreeterCompiledProtobufIsNotCreated, err)
+		return err
+	} else {
+		fmt.Fprintln(cmd.OutOrStdout())
+		fmt.Fprintf(cmd.OutOrStdout(), GreeterCompiledProtobufIsCreated)
+	}
+
+	greeterPb = filepath.Join(folderPath, "greeter_grpc.pb.go")
+	file, err = os.Create(greeterPb)
+	if err != nil {
+		fmt.Fprintln(cmd.OutOrStdout())
+		fmt.Fprintf(cmd.OutOrStdout(), GreeterCompiledGrpcProtobufIsNotCreated, err)
+		return err
+
+	}
+	defer file.Close()
+
+	pbGrpcTempl := strings.ReplaceAll(greeterProtobufGrpcPbTmpl, "U+0060", "`")
+	temp = template.Must(template.New("").Parse(pbGrpcTempl))
+	err = temp.Execute(file, goModuleVars)
+	if err != nil {
+		fmt.Fprintln(cmd.OutOrStdout())
+		fmt.Fprintf(cmd.OutOrStdout(), GreeterCompiledGrpcProtobufIsNotCreated, err)
+		return err
+	} else {
+		fmt.Fprintln(cmd.OutOrStdout())
+		fmt.Fprintf(cmd.OutOrStdout(), GreeterCompiledGrpcProtobufIsCreated)
+	}
+
 	return nil
 }
