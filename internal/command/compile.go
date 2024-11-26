@@ -64,7 +64,7 @@ func runCompileCmdExecute(cmd *cobra.Command, args []string) {
 	compiledFolderPath := filepath.Join(desiredProtoPath, args[0])
 	err2 := os.Mkdir(compiledFolderPath, os.ModePerm)
 	if err2 != nil {
-		fmt.Fprintf(cmd.OutOrStdout(), RunCompileCommandError, err.Error())
+		fmt.Fprintf(cmd.OutOrStdout(), RunCompileCommandError, err2.Error())
 		return
 	}
 
