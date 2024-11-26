@@ -340,7 +340,7 @@ DerivedData/
           "time_format": "15:04:05",
           "time_zone": "Local",
           "time_interval": 500,
-          "output": "stdout",
+          "output": "stdout"
         }
       }
     }
