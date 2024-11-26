@@ -31,7 +31,7 @@ func runCompileCmdExecute(cmd *cobra.Command, args []string) {
 	fmt.Fprintf(cmd.OutOrStdout(), RunCompileCommandInitMsg+"\n")
 	fmt.Fprintf(cmd.OutOrStdout(), RunCompileCommandFileName+"\n", args[0])
 
-	ex, err := os.Executable()
+	ex, err := os.Getwd()
 	if err != nil {
 		fmt.Fprintf(cmd.OutOrStdout(), err.Error())
 	} else {
