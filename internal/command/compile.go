@@ -71,12 +71,20 @@ func runCompileCmdExecute(cmd *cobra.Command, args []string) {
 	//commandToBeExecuted := fmt.Sprintf("--go_out=%s --go_opt=paths=source_relative --go-grpc_out=%s --go-grpc_opt=paths=source_relative %s",
 	//	compiledFolderPath, compiledFolderPath, protobufFilePath)
 
+	// changing the directory to the protobuf folder
+	err3 := os.Chdir(desiredProtoPath)
+	if err3 != nil {
+		fmt.Fprintln(cmd.OutOrStdout())
+		fmt.Fprintf(cmd.OutOrStdout(), RunCompileCommandError, err3.Error())
+		return
+	}
+
 	protoCmd := exec.Command("protoc")
-	protoCmd.Args = append(protoCmd.Args, fmt.Sprintf("--go_out=%s", compiledFolderPath))
+	protoCmd.Args = append(protoCmd.Args, fmt.Sprintf("--go_out=./%s", args[0]))
 	protoCmd.Args = append(protoCmd.Args, fmt.Sprintf("--go_opt=paths=source_relative"))
-	protoCmd.Args = append(protoCmd.Args, fmt.Sprintf("--go-grpc_out=%s", compiledFolderPath))
+	protoCmd.Args = append(protoCmd.Args, fmt.Sprintf("--go-grpc_out=./%s", args[0]))
 	protoCmd.Args = append(protoCmd.Args, fmt.Sprintf("--go-grpc_opt=paths=source_relative"))
-	protoCmd.Args = append(protoCmd.Args, fmt.Sprintf(protobufFilePath))
+	protoCmd.Args = append(protoCmd.Args, fmt.Sprintf("%s.proto", args[0]))
 
 	fmt.Fprintln(cmd.OutOrStdout(), protoCmd)
 	protocErr := protoCmd.Start()
