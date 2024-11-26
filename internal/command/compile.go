@@ -68,12 +68,17 @@ func runCompileCmdExecute(cmd *cobra.Command, args []string) {
 	}
 
 	// protoc --go_out=./exchange --go_opt=paths=source_relative --go-grpc_out=./exchange --go-grpc_opt=paths=source_relative exchange.proto
-	commandToBeExecuted := fmt.Sprintf("--go_out=%s --go_opt=paths=source_relative --go-grpc_out=%s --go-grpc_opt=paths=source_relative %s",
-		compiledFolderPath, compiledFolderPath, protobufFilePath)
+	//commandToBeExecuted := fmt.Sprintf("--go_out=%s --go_opt=paths=source_relative --go-grpc_out=%s --go-grpc_opt=paths=source_relative %s",
+	//	compiledFolderPath, compiledFolderPath, protobufFilePath)
 
 	protoCmd := exec.Command("protoc")
-	protoCmd.Args = append(protoCmd.Args, commandToBeExecuted)
-	//gitCmd.Args = append(gitCmd.Args, "--initial-branch=main")
+	protoCmd.Args = append(protoCmd.Args, fmt.Sprintf("--go_out=%s", compiledFolderPath))
+	protoCmd.Args = append(protoCmd.Args, fmt.Sprintf("--go_opt=paths=source_relative"))
+	protoCmd.Args = append(protoCmd.Args, fmt.Sprintf("--go-grpc_out=%s", compiledFolderPath))
+	protoCmd.Args = append(protoCmd.Args, fmt.Sprintf("--go-grpc_opt=paths=source_relative"))
+	protoCmd.Args = append(protoCmd.Args, fmt.Sprintf(protobufFilePath))
+
+	fmt.Fprintln(cmd.OutOrStdout(), protoCmd)
 	protocErr := protoCmd.Start()
 	if protocErr != nil {
 		fmt.Fprintln(cmd.OutOrStdout())
