@@ -32,3 +32,10 @@ func SetupManager() {
 	l, _ := logger.GetManager().GetLogger()
 	db.GetManager().RegisterLogger(l)
 }
+
+// MARK: TYPE ALIASES
+
+type InsertModelError = db.InsertModelErr
+type UpdateModelError = db.UpdateModelErr
+type MongoFindQueryErr = db.MongoFindQueryErr
+type MongoDeleteErr = db.MongoDeleteErr
