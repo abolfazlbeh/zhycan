@@ -35,7 +35,27 @@ func SetupManager() {
 
 // MARK: TYPE ALIASES
 
-type InsertModelError = db.InsertModelErr
-type UpdateModelError = db.UpdateModelErr
+type InsertModelErr = db.InsertModelErr
+type UpdateModelErr = db.UpdateModelErr
 type MongoFindQueryErr = db.MongoFindQueryErr
 type MongoDeleteErr = db.MongoDeleteErr
+
+// NewInsertModelErr - return a new instance of InsertModelErr
+func NewInsertModelErr(table string, data any, err error) error {
+	return db.NewInsertModelErr(table, data, err)
+}
+
+// NewUpdateModelErr - return a new instance of UpdateModelErr
+func NewUpdateModelErr(table string, data any, err error) error {
+	return db.NewUpdateModelErr(table, data, err)
+}
+
+// NewMongoFindQueryErr - return a new instance of MongoFindQueryErr
+func NewMongoFindQueryErr(collection string, filter any, err error) error {
+	return db.NewMongoFindQueryErr(collection, filter, err)
+}
+
+// NewMongoDeleteErr - return a new instance of MongoDeleteErr
+func NewMongoDeleteErr(collection string, filter any, err error) error {
+	return db.NewMongoDeleteErr(collection, filter, err)
+}
