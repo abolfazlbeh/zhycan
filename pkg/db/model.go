@@ -37,6 +37,8 @@ func SetupManager() {
 
 type InsertModelErr = db.InsertModelErr
 type UpdateModelErr = db.UpdateModelErr
+type SelectQueryErr = db.SelectQueryErr
+type DeleteModelErr = db.DeleteModelErr
 type MongoFindQueryErr = db.MongoFindQueryErr
 type MongoDeleteErr = db.MongoDeleteErr
 
@@ -48,6 +50,16 @@ func NewInsertModelErr(table string, data any, err error) error {
 // NewUpdateModelErr - return a new instance of UpdateModelErr
 func NewUpdateModelErr(table string, data any, err error) error {
 	return db.NewUpdateModelErr(table, data, err)
+}
+
+// NewDeleteModelErr - return a new instance of DeleteModelErr
+func NewDeleteModelErr(table string, data any, err error) error {
+	return db.NewDeleteModelErr(table, data, err)
+}
+
+// NewSelectQueryErr - return a new instance of SelectQueryErr
+func NewSelectQueryErr(query string, err error) error {
+	return db.NewSelectQueryErr(query, err)
 }
 
 // NewMongoFindQueryErr - return a new instance of MongoFindQueryErr
